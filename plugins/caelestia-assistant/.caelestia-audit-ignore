@@ -112,3 +112,34 @@ assistant/data/index/bm25.json:1
           never contain it (gate executes nothing).
 tests/brain/test_command_gate_qml.py:200
 
+        # tests/diagnostics/test_argumentation.py
+        # Test fixtures: risky command strings as classification test data (assistant's own argumentation
+          tests).
+tests/diagnostics/test_argumentation.py:168
+tests/diagnostics/test_argumentation.py:192
+tests/diagnostics/test_argumentation.py:201
+tests/diagnostics/test_argumentation.py:205
+tests/diagnostics/test_argumentation.py:265
+tests/diagnostics/test_argumentation.py:267
+tests/diagnostics/test_argumentation.py:279
+
+        # tests/diagnostics/test_safety_lint.py
+        # Test fixtures for the assistant's own safety linter: destructive/privileged command strings as
+          expected-classification data.
+tests/diagnostics/test_safety_lint.py:23
+tests/diagnostics/test_safety_lint.py:24
+tests/diagnostics/test_safety_lint.py:50
+tests/diagnostics/test_safety_lint.py:51
+
+        # tests/generative/test_generative.py
+        # Test fixtures: privileged command strings verifying the SUGGESTED_NOT_EXECUTED labeling
+          invariant.
+tests/generative/test_generative.py:197
+tests/generative/test_generative.py:209
+tests/generative/test_generative.py:318
+
+        # tests/shellkb/test_howto.py
+        # The string 'sudo rm' is the assertion TARGET: the test asserts it is NOT present in any how-to
+          step (safety invariant).
+tests/shellkb/test_howto.py:28
+
