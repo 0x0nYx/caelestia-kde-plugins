@@ -80,6 +80,23 @@ assistant/capabilities/diagnostics/rules.d/known_regressions.json:27
           executed.
 assistant/capabilities/diagnostics/rules.d/runtime.json:74
 
+        # assistant/capabilities/generative/rag.py
+        # Command-verb vocabulary used to LABEL suggested command lines (SUGGESTED_NOT_EXECUTED; over-
+          labeling is the safe direction). Verbs are string data, never executed.
+assistant/capabilities/generative/rag.py:90
+assistant/capabilities/generative/rag.py:91
+assistant/capabilities/generative/rag.py:96
+
+        # assistant/capabilities/genius/sysintel.py
+        # Command-intent parsing strips the literal 'sudo' token; analysis only, never executed.
+assistant/capabilities/genius/sysintel.py:85
+assistant/capabilities/genius/sysintel.py:87
+
+        # assistant/capabilities/retrieval/tools/build_docs_corpus.py
+        # Offline retrieval synonym strings ('git clone fails', 'submodule empty') - search synonyms over
+          local docs; no network calls.
+assistant/capabilities/retrieval/tools/build_docs_corpus.py:62
+
         # assistant/data/index/bm25.json
         # Built BM25 search-index artifact (single-line JSON): term/document data mentioning 'curl', 'git
           ls-remote'. Data, not code; JSON cannot carry line-level opt-out comments.
