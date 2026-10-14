@@ -69,7 +69,7 @@ PanelWindow {
 
   Timer {
     id: previewTimer
-    interval: 100
+    interval: 500
     onTriggered: {
       if (!appWallpaper.showing || !appWallpaper.cardVisible) return
       var idx = appWallpaper.currentSelectedIndex()
