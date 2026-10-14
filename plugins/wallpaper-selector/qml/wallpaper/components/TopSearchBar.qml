@@ -17,10 +17,11 @@ StyledRect {
     signal settingsClicked()
     signal searchInteracted()
 
-    color: Qt.rgba(colors.secondaryContainer.r, colors.secondaryContainer.g, colors.secondaryContainer.b, 0.95)
+    color: colors && colors.secondaryContainer ? Qt.rgba(colors.secondaryContainer.r, colors.secondaryContainer.g, colors.secondaryContainer.b, 0.95) : Qt.rgba(0.2, 0.2, 0.2, 0.95)
     radius: ShellConfig.Tokens.rounding.large
     implicitWidth: 310
-    implicitHeight: searchInput.implicitHeight
+    implicitHeight: 42
+    height: implicitHeight
 
     Text {
         id: searchIcon
@@ -28,12 +29,12 @@ StyledRect {
         anchors.left: parent.left
         anchors.leftMargin: ShellConfig.Tokens.padding.medium
         text: "\uF002"
-        color: colors.surfaceText
+        color: colors && colors.surfaceText ? colors.surfaceText : "white"
         font.family: "Symbols Nerd Font"
         font.pixelSize: 16
     }
 
-    StyledTextField {
+    TextField {
         id: searchInput
         anchors.left: searchIcon.right
         anchors.leftMargin: ShellConfig.Tokens.spacing.small
@@ -41,11 +42,14 @@ StyledRect {
         anchors.rightMargin: clearBtn.visible ? ShellConfig.Tokens.spacing.small : ShellConfig.Tokens.padding.medium
         anchors.verticalCenter: parent.verticalCenter
         placeholderText: qsTr("Search wallpapers...")
-        color: colors.surfaceText
-        placeholderTextColor: Qt.rgba(colors.surfaceText.r, colors.surfaceText.g, colors.surfaceText.b, 0.6)
-        
-        topPadding: ShellConfig.Tokens.padding.medium
-        bottomPadding: ShellConfig.Tokens.padding.medium
+        color: colors && colors.surfaceText ? colors.surfaceText : "white"
+        placeholderTextColor: colors && colors.surfaceText ? Qt.rgba(colors.surfaceText.r, colors.surfaceText.g, colors.surfaceText.b, 0.6) : Qt.rgba(1, 1, 1, 0.6)
+        background: null
+        font: ShellConfig.Tokens.font.body.medium
+        topPadding: 0
+        bottomPadding: 0
+        leftPadding: 0
+        rightPadding: 0
 
         onTextChanged: CaelestiaApi.visuals.wallpaper.searchText = text
         onAccepted: root.accepted()
@@ -75,7 +79,7 @@ StyledRect {
         text: "\uF00D" // nf-fa-times
         font.family: "Symbols Nerd Font"
         font.pixelSize: 14
-        color: clearMouse.containsMouse ? (colors.primary || "white") : Qt.rgba(colors.surfaceText.r, colors.surfaceText.g, colors.surfaceText.b, 0.7)
+        color: clearMouse.containsMouse ? (colors && colors.primary ? colors.primary : "white") : (colors && colors.surfaceText ? Qt.rgba(colors.surfaceText.r, colors.surfaceText.g, colors.surfaceText.b, 0.7) : Qt.rgba(1, 1, 1, 0.7))
 
         MouseArea {
             id: clearMouse

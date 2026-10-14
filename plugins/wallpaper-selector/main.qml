@@ -13,7 +13,7 @@ Scope {
     id: root
 
     property bool showing: false
-    property string activeScreen: ""
+    property string activeScreen: (Quickshell.screens && Quickshell.screens.length > 0) ? Quickshell.screens[0].name : ""
 
     property int settingsOpenCount: 0
     signal closeSettingsRequested()
@@ -21,11 +21,16 @@ Scope {
     function registerShortcut() {
         CaelestiaApi.shortcuts.register("wallpaper_selector", "Toggle Wallpaper Selector", Config.shortcut, () => {
             if (!root.showing) {
+                var screenName = "";
                 if (typeof CaelestiaApi.windows.kwin !== "undefined" && CaelestiaApi.windows.kwin) {
-                    root.activeScreen = CaelestiaApi.windows.kwin.cursorOutputName() || "";
+                    screenName = CaelestiaApi.windows.kwin.cursorOutputName() || "";
                 } else if (typeof Hypr !== "undefined" && Hypr) {
-                    root.activeScreen = Hypr.focusedMonitor ? Hypr.focusedMonitor.name : "";
+                    screenName = Hypr.focusedMonitor ? Hypr.focusedMonitor.name : "";
                 }
+                if (!screenName && Quickshell.screens && Quickshell.screens.length > 0) {
+                    screenName = Quickshell.screens[0].name;
+                }
+                root.activeScreen = screenName;
                 root.showing = true;
             } else {
                 if (root.settingsOpenCount > 0) {
@@ -53,7 +58,7 @@ Scope {
             required property var modelData
             screen: modelData
             showing: root.showing
-            isMainScreen: modelData.name === root.activeScreen
+            isMainScreen: (Quickshell.screens.length <= 1) || (root.activeScreen ? modelData.name === root.activeScreen : modelData === Quickshell.screens[0])
             colors: PluginStyle.Colors {}
             
             Connections {
