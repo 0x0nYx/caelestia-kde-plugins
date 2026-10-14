@@ -1,7 +1,7 @@
 {
   "format": "caelestia-plugin-index",
   "version": 1,
-  "generated": "2026-09-12T19:11:04Z",
+  "generated": "2026-10-14T19:39:45Z",
   "plugins": [
     {
       "id": "shimeji-cat",
@@ -34,7 +34,7 @@
       "description": "Press Meta+Shift+W to view a full-screen wallpaper selector with glassmorphism UI.",
       "icon": "wallpaper",
       "mediaurl": "demo.mp4",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "type": "quickshell",
       "restart": true,
       "author": {
