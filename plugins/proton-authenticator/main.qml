@@ -419,7 +419,7 @@ Item {
             id: card
 
             width: 380
-            height: Math.min(content.implicitHeight + Tokens.padding.extraLarge * 2, win.height - win.barThickness - win.gap * 2)
+            height: Math.min((shownLocked ? Math.max(content.implicitHeight, lockColumn.implicitHeight) : content.implicitHeight) + Tokens.padding.extraLarge * 2, win.height - win.barThickness - win.gap * 2)
 
             property real slide: root.opened ? 1 : 0
             Behavior on slide {
@@ -608,6 +608,7 @@ Item {
                 MouseArea { anchors.fill: parent }
 
                 ColumnLayout {
+                    id: lockColumn
                     anchors.centerIn: parent
                     width: parent.width - Tokens.padding.extraLarge * 4
                     spacing: Tokens.spacing.medium
@@ -632,7 +633,7 @@ Item {
                         Layout.fillWidth: true
                         visible: root.unlockMode !== "loading"
                         echoMode: TextInput.Password
-                        placeholderText: root.forgotMode ? qsTr("PC account password")
+                        placeholderText: root.forgotMode ? qsTr("root password")
                             : root.unlockMode === "create" ? qsTr("New code (6+ characters)") : qsTr("Unlock code")
                         leadingIcon: "key"
                         focus: root.opened && root.locked
@@ -661,10 +662,10 @@ Item {
 
                     StyledText {
                         Layout.fillWidth: true
-                        visible: text.length > 0
                         horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.WordWrap
-                        text: root.unlockError
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                        text: root.unlockError.length > 0 ? root.unlockError : " "
                         color: Colours.palette.m3error
                         font: Tokens.font.label.small
                     }
