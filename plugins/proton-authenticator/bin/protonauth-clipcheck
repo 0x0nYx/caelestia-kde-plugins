@@ -3,11 +3,16 @@ set -u
 LC_ALL=C
 export LC_ALL
 
-WL_PASTE=/usr/bin/wl-paste
-HEAD=/usr/bin/head
-TIMEOUT=/usr/bin/timeout
-OD=/usr/bin/od
-TR=/usr/bin/tr
+missing() {
+  printf 'DEPS_MISSING %s\n' "$1"
+  exit 0
+}
+
+WL_PASTE=$(command -v wl-paste) || missing wl-paste
+HEAD=$(command -v head) || missing head
+TIMEOUT=$(command -v timeout) || missing timeout
+OD=$(command -v od) || missing od
+TR=$(command -v tr) || missing tr
 
 nomatch() {
   printf 'nomatch\n'
@@ -30,5 +35,5 @@ expected=$(printf '%s' "$want" | hex)
 if [ -n "$got" ] && [ "$got" = "$expected" ]; then
   printf 'match\n'
 else
-  nomatch
+  printf 'nomatch\n'
 fi
