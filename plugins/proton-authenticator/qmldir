@@ -1,1 +1,2 @@
 singleton ProtonBridge ProtonBridge.qml
+singleton ProtonPaths ProtonPaths.qml

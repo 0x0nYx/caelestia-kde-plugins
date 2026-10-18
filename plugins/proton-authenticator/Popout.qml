@@ -43,81 +43,75 @@ Item {
     property string copiedKey: ""
     property real nowSec: Date.now() / 1000
 
-
-    readonly property string pluginDir: {
-        var s = String(Qt.resolvedUrl("."));
-        if (s.indexOf("file://") === 0) s = s.substring(7);
-        if (s.length && s.charAt(s.length - 1) !== "/") s += "/";
-        return s;
-    }
-
     // unlock code
     property bool locked: true
-    property string unlockMode: "loading"
+    property string mode: "checking"
     property string unlockError: ""
     property bool unlockBusy: false
     property string _unlockSecret: ""
     property string _token: ""
-    property bool forgotMode: false
-    property string _unlockOp: ""
-    readonly property string unlockToolPath: pluginDir + "bin/protonauth-unlock"
-    readonly property bool unlockReady: unlockToolPath.endsWith("/bin/protonauth-unlock")
+
+    readonly property var unlockCmd: ({ create: "create", unlock: "verify", reset: "reset" })
+    readonly property var labels: ({
+        checking: { title: qsTr("Enter unlock code"), placeholder: qsTr("Unlock code"), action: qsTr("Unlock"), toggle: "" },
+        unlock: { title: qsTr("Enter unlock code"), placeholder: qsTr("Unlock code"), action: qsTr("Unlock"), toggle: qsTr("Forgot code?") },
+        create: { title: qsTr("Create unlock code"), placeholder: qsTr("New code (6+ characters)"), action: qsTr("Set code"), toggle: "" },
+        reset: { title: qsTr("Reset unlock code"), placeholder: qsTr("root password"), action: qsTr("Reset code"), toggle: qsTr("Back") }
+    })[mode]
 
     function lock(): void {
-        if (_token.length > 0 && unlockReady) Quickshell.execDetached([unlockToolPath, "lock"]);
+        if (_token.length > 0 && ProtonPaths.ready) Quickshell.execDetached([ProtonPaths.unlock, "lock"]);
         _token = "";
-        forgotMode = false;
         locked = true;
         unlockError = "";
-        if (unlockMode === "enter" || unlockMode === "create") return;
+        if (mode === "reset") mode = "unlock";
+        if (mode === "unlock" || mode === "create") return;
         unlockStatus();
     }
 
     function unlockStatus(): void {
-        if (!unlockReady || unlockProc.running) return;
-        _unlockOp = "status";
-        unlockProc.command = [unlockToolPath, "status"];
+        if (!ProtonPaths.ready || unlockProc.running) return;
+        unlockProc.command = [ProtonPaths.unlock, "status"];
         unlockProc.stdinEnabled = false;
         unlockProc.running = true;
     }
 
     function submitUnlock(code: string, confirm: string): void {
-        if (unlockBusy || !unlockReady || unlockProc.running) return;
-        if (unlockMode === "create" && !forgotMode) {
+        var cmd = unlockCmd[mode];
+        if (!cmd || unlockBusy || !ProtonPaths.ready || unlockProc.running) return;
+        if (mode === "create") {
             if (code.length < 6) { unlockError = qsTr("Use at least 6 characters"); return; }
             if (code !== confirm) { unlockError = qsTr("Codes don't match"); return; }
         } else if (code.length === 0) return;
         unlockError = "";
         unlockBusy = true;
         _unlockSecret = code;
-        _unlockOp = forgotMode ? "reset" : (unlockMode === "create" ? "create" : "verify");
-        unlockProc.command = [unlockToolPath, _unlockOp];
+        unlockProc.command = [ProtonPaths.unlock, cmd];
         unlockProc.stdinEnabled = true;
         unlockProc.running = true;
     }
 
-    function _unlockDone(out: string): void {
+    function _unlockDone(text: string): void {
         unlockBusy = false;
-        out = out.trim();
-        if (_unlockOp === "status") {
-            unlockMode = out === "set" ? "enter" : "create";
+        var r = Model.parseUnlock(text);
+        if (r.status === "set" || r.status === "unset") {
+            mode = r.status === "set" ? "unlock" : "create";
             return;
         }
-        if (out === "reset") {
-            forgotMode = false;
-            unlockMode = "create";
+        if (r.status === "reset") {
+            mode = "create";
             unlockError = "";
-        } else if (out.indexOf("ok ") === 0 && out.length === 67) {
-            _token = out.substring(3);
-            unlockMode = "enter";
+        } else if (r.status === "unlocked") {
+            _token = r.token;
+            mode = "unlock";
             locked = false;
             nowSec = Date.now() / 1000;
             svc.refresh();
             idleTimer.restart();
-        } else if (out.indexOf("wait ") === 0) {
-            unlockError = qsTr("Too many attempts. Try again in %1 s").arg(parseInt(out.substring(5), 10) || 30);
-        } else if (out === "bad") {
-            unlockError = forgotMode ? qsTr("Wrong password") : qsTr("Wrong code");
+        } else if (r.status === "wait") {
+            unlockError = qsTr("Too many attempts. Try again in %1 s").arg(r.waitSec || 30);
+        } else if (r.status === "bad") {
+            unlockError = mode === "reset" ? qsTr("Wrong password") : qsTr("Wrong code");
         } else {
             unlockError = qsTr("Could not unlock");
         }
@@ -128,10 +122,10 @@ Item {
         stdinEnabled: false
         stdout: StdioCollector {
             waitForEnd: true
-            onStreamFinished: root._unlockDone(text.length <= 256 ? text : "")
+            onStreamFinished: root._unlockDone(text)
         }
         onStarted: {
-            if (root._unlockOp !== "status") write(root._unlockSecret + "\n");
+            if (root._unlockSecret.length > 0) write(root._unlockSecret + "\n");
             root._unlockSecret = "";
             stdinEnabled = false;
         }
@@ -150,29 +144,26 @@ Item {
     Component.onCompleted: loadPrefs()
 
     Component.onDestruction: {
-        if (_token.length > 0 && unlockReady) Quickshell.execDetached([unlockToolPath, "lock"]);
+        if (_token.length > 0 && ProtonPaths.ready) Quickshell.execDetached([ProtonPaths.unlock, "lock"]);
     }
 
     property var pins: ({})
     property var used: ({})
     property bool _prefsDirty: false
     property bool _prefsTouched: false
-    readonly property string prefsToolPath: pluginDir + "bin/protonauth-prefs"
-
-    readonly property bool prefsReady: prefsToolPath.endsWith("/bin/protonauth-prefs")
 
     function loadPrefs(): void {
-        if (prefsRead.running || !prefsReady) return;
-        prefsRead.command = [prefsToolPath, "read"];
+        if (prefsRead.running || !ProtonPaths.ready) return;
+        prefsRead.command = [ProtonPaths.prefs, "read"];
         prefsRead.running = true;
     }
 
     function savePrefs(): void {
-        if (!prefsReady) return;
+        if (!ProtonPaths.ready) return;
         _prefsTouched = true;
         if (prefsWrite.running) { _prefsDirty = true; return; }
         _prefsDirty = false;
-        prefsWrite.command = [prefsToolPath, "write"];
+        prefsWrite.command = [ProtonPaths.prefs, "write"];
         prefsWrite.stdinEnabled = true;
         prefsWrite.running = true;
     }
@@ -226,16 +217,16 @@ Item {
         savePrefs();
     }
 
-    readonly property var rows: Model.rankEntries(svc.entries, searchText, pins, used, sortMode)
+    readonly property var rows: Model.rankEntries(svc.result.entries, searchText, pins, used, sortMode)
     readonly property var selectedRow: rows.length ? rows[Math.min(selectedIndex, rows.length - 1)] : null
 
     readonly property string statusLine: {
-        if (svc.refreshing && svc.entries.length === 0) return qsTr("Loading…");
-        if (!svc.ok && svc.error) return Model.errorHint(svc.error);
+        if (svc.refreshing && svc.result.entries.length === 0) return qsTr("Loading…");
+        if (!svc.result.ok && svc.result.error) return Model.errorHint(svc.result.error);
         if (rows.length === 0) return searchText.length ? qsTr("No matches") : qsTr("No accounts");
-        if (svc.skipped.length > 0)
-            return qsTr("%n account(s) could not be read: %1", "", svc.skipped.length).arg(svc.skipped.slice(0, 3).join(", "));
-        if (svc.warning === "FALLBACK_KEY")
+        if (svc.result.skipped.length > 0)
+            return qsTr("%n account(s) could not be read: %1", "", svc.result.skipped.length).arg(svc.result.skipped.slice(0, 3).join(", "));
+        if (svc.result.warning === "FALLBACK_KEY")
             return qsTr("Proton Authenticator is using its unprotected fallback key. Open it and choose “Secure now”.");
         return "";
     }
@@ -294,13 +285,12 @@ Item {
     Service {
         id: svc
         settings: ({ demoMode: cfg.demoMode })
-        pluginDir: root.pluginDir
         token: root._token
     }
 
     Connections {
         target: svc
-        function onErrorChanged() { if (svc.error && svc.error.code === "LOCKED" && root.opened && !root.locked) root.lock(); }
+        function onResultChanged() { if (svc.result.error && svc.result.error.code === "LOCKED" && root.opened && !root.locked) root.lock(); }
     }
 
     Timer {
@@ -405,7 +395,7 @@ Item {
             Layout.fillWidth: true
             visible: text.length > 0
             text: root.statusLine
-            color: (!svc.ok && svc.error) ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
+            color: (!svc.result.ok && svc.result.error) ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
             wrapMode: Text.WordWrap
         }
 
@@ -500,36 +490,33 @@ Item {
 
             StyledText {
                 Layout.alignment: Qt.AlignHCenter
-                text: root.forgotMode ? qsTr("Reset unlock code")
-                    : root.unlockMode === "create" ? qsTr("Create unlock code") : qsTr("Enter unlock code")
+                text: root.labels.title
                 font: Tokens.font.title.small
             }
 
             StyledTextField {
                 id: codeField
                 Layout.fillWidth: true
-                visible: root.unlockMode !== "loading"
+                visible: root.mode !== "checking"
                 echoMode: TextInput.Password
-                placeholderText: root.forgotMode ? qsTr("root password")
-                    : root.unlockMode === "create" ? qsTr("New code (6+ characters)") : qsTr("Unlock code")
+                placeholderText: root.labels.placeholder
                 leadingIcon: "key"
                 focus: root.opened && root.locked
-                onAccepted: (root.unlockMode === "create" && !root.forgotMode) ? confirmField.forceActiveFocus() : root.submitUnlock(text, "")
+                onAccepted: root.mode === "create" ? confirmField.forceActiveFocus() : root.submitUnlock(text, "")
                 Keys.onEscapePressed: root.close()
 
                 Connections {
                     target: root
                     function onLockedChanged() { codeField.text = ""; confirmField.text = ""; if (root.locked) codeField.forceActiveFocus(); }
                     function onOpenedChanged() { if (root.opened) { codeField.text = ""; confirmField.text = ""; codeField.forceActiveFocus(); } }
-                    function onForgotModeChanged() { codeField.text = ""; confirmField.text = ""; }
-                    function onUnlockModeChanged() { codeField.text = ""; confirmField.text = ""; if (root.opened && root.locked) codeField.forceActiveFocus(); }
+                    function onModeChanged() { codeField.text = ""; confirmField.text = ""; if (root.opened && root.locked) codeField.forceActiveFocus(); }
                 }
             }
 
             StyledTextField {
                 id: confirmField
                 Layout.fillWidth: true
-                visible: root.unlockMode === "create" && !root.forgotMode
+                visible: root.mode === "create"
                 echoMode: TextInput.Password
                 placeholderText: qsTr("Repeat code")
                 leadingIcon: "key"
@@ -549,17 +536,17 @@ Item {
 
             TextButton {
                 Layout.fillWidth: true
-                visible: root.unlockMode !== "loading"
+                visible: root.mode !== "checking"
                 enabled: !root.unlockBusy
-                text: root.forgotMode ? qsTr("Reset code") : root.unlockMode === "create" ? qsTr("Set code") : qsTr("Unlock")
+                text: root.labels.action
                 onClicked: root.submitUnlock(codeField.text, confirmField.text)
             }
 
             TextButton {
                 Layout.fillWidth: true
-                visible: root.unlockMode === "enter"
-                text: root.forgotMode ? qsTr("Back") : qsTr("Forgot code?")
-                onClicked: { root.forgotMode = !root.forgotMode; root.unlockError = ""; codeField.text = ""; codeField.forceActiveFocus(); }
+                visible: root.labels.toggle.length > 0
+                text: root.labels.toggle
+                onClicked: { root.mode = root.mode === "reset" ? "unlock" : "reset"; root.unlockError = ""; codeField.text = ""; codeField.forceActiveFocus(); }
             }
         }
     }

@@ -2,27 +2,20 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "Model.js" as Model
+import "."
 
 Item {
     id: root
 
     property var settings: ({})
-    property string pluginDir: ""
     property string token: ""
 
     property int window: 3
 
-    property bool ok: false
-    property var entries: []
-    property var error: null
-
-    property string warning: ""
-    property var skipped: []
+    property var result: Model.normalizeList(null)
     property bool refreshing: false
 
     property real refreshAt: Infinity
-
-    readonly property string helperPath: pluginDir + "bin/protonauth-list"
 
     readonly property bool demoMode: Model.asBool(settings ? settings.demoMode : false)
 
@@ -32,11 +25,11 @@ Item {
     function _run(args) {
         if (listProcess.running) return
 
-        if (!helperPath.endsWith("/bin/protonauth-list")) return
+        if (!ProtonPaths.ready) return
         refreshing = true
         _out = ""
         _timedOut = false
-        listProcess.command = [helperPath].concat(args)
+        listProcess.command = [ProtonPaths.list].concat(args)
         listProcess.stdinEnabled = true
         listProcess.running = true
     }
@@ -50,22 +43,15 @@ Item {
     }
 
     function forget() {
-        entries = []
+        result = Model.normalizeList(null)
         refreshAt = Infinity
     }
 
-    function apply() {
-        var parsed = _timedOut
-            ? { ok: false, entries: [], error: { code: "HELPER_TIMEOUT", message: "Helper timed out" } }
-            : Model.parseList(_out)
+    function apply(exitCode, exitStatus) {
+        result = Model.listResult(_out, exitCode, exitStatus !== 0, _timedOut)
         _out = ""
-        ok = parsed.ok === true
-        error = parsed.error || null
-        warning = parsed.warning ? String(parsed.warning) : ""
-        skipped = Array.isArray(parsed.skipped) ? parsed.skipped : []
-        entries = parsed.entries || []
 
-        refreshAt = ok ? Model.refreshAt(entries) : Date.now() / 1000 + 10
+        refreshAt = result.ok ? Model.refreshAt(result.entries) : Date.now() / 1000 + 10
         refreshing = false
     }
 
@@ -79,7 +65,7 @@ Item {
             waitForEnd: true
             onStreamFinished: root._out = text
         }
-        onExited: root.apply()
+        onExited: (exitCode, exitStatus) => root.apply(exitCode, exitStatus)
     }
 
     Timer {
