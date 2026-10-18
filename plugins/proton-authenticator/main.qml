@@ -4,8 +4,6 @@ import Caelestia
 import qs.services.api
 import "."
 
-// Plugin-level entry: global shortcut and IPC only. The bar icon is BarWidget.qml
-// and the panel is Popout.qml (both registered through barWidgets in metadata.json).
 Item {
     id: root
 

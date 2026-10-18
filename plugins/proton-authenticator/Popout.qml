@@ -37,7 +37,6 @@ Item {
         return (isFinite(n) && n >= 0) ? Math.min(n, 600) : 20;
     }
 
-    // Shown = the shell is revealing our popout (reported by BarWidget.qml through the bridge).
     readonly property bool opened: visible && ProtonBridge.popoutShown
     property string searchText: ""
     property int selectedIndex: 0
@@ -138,7 +137,7 @@ Item {
         }
     }
 
-    // Re-lock after inactivity
+    // Relock after inactivity
     Timer { id: idleTimer; interval: 45000; onTriggered: root.lock() }
 
     function close(): void { ProtonBridge.close(); }
@@ -150,7 +149,6 @@ Item {
 
     Component.onCompleted: loadPrefs()
 
-    // Never leave an unlocked session behind if the shell destroys the popout.
     Component.onDestruction: {
         if (_token.length > 0 && unlockReady) Quickshell.execDetached([unlockToolPath, "lock"]);
     }
@@ -321,12 +319,10 @@ Item {
     Timer { id: closeAfterCopy; interval: 180; onTriggered: root.close() }
     Timer { id: forgetTimer; interval: 260; onTriggered: svc.forget() }
 
-    // ---- sizing: the shell's popout container sizes itself from these ----
     implicitWidth: 380
     implicitHeight: (shownLocked ? Math.max(content.implicitHeight, lockColumn.implicitHeight) : content.implicitHeight)
         + Tokens.padding.extraLarge * 2
 
-    // Keep the last lock state while the popout is hidden so closing does not flash the lock layer.
     property bool shownLocked: true
     Binding {
         target: root

@@ -5,18 +5,13 @@ import Quickshell
 import Quickshell.Io
 import "Model.js" as Model
 
-// Lives for the whole shell session, so a copied code is still cleared from the
-// clipboard after the popout has been closed (and possibly destroyed), and so the
-// plugin-level shortcut / IPC handlers in main.qml can reach the bar widget.
+
 Singleton {
     id: root
 
-    // One request, one target state: every bar widget applies the same value, so two
-    // monitors can never fight each other (one opening, the other closing).
     signal openStateRequested(bool open)
     signal refreshRequested
 
-    // How many bar widgets currently see our popout as shown (kept by BarWidget.qml).
     property int shownCount: 0
     readonly property bool popoutShown: shownCount > 0
 

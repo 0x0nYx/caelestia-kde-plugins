@@ -11,13 +11,10 @@ import "."
 Item {
     id: root
 
-    // ambient values the shell hands to widgets that declare them
     property var screen
     property var popouts
 
     readonly property string widgetId: "protonAuthenticator"   // must match barWidgets[].id
-    // The shell closes a popout by clearing hasCurrent and leaves currentName set,
-    // so "shown" needs both.
     readonly property bool active: popouts ? (popouts.currentName === widgetId && popouts.hasCurrent === true) : false
 
     implicitWidth: 32
@@ -26,8 +23,6 @@ Item {
     onActiveChanged: ProtonBridge.shownCount += active ? 1 : -1
     Component.onDestruction: if (active) ProtonBridge.shownCount -= 1
 
-    // Centre of this icon along the bar, measured in the window's own coordinates
-    // (not the popout container's parent, which moves with the popout).
     function _centerAlongBar(): real {
         var p = root.mapToItem(null, root.width / 2, root.height / 2);
         var vertical = Config.bar.position === "left" || Config.bar.position === "right";
@@ -42,16 +37,12 @@ Item {
         popouts.hasCurrent = open;
     }
 
-    // The shell calls this while the pointer is over the icon. We only keep an
-    // already-open popout in place (so moving the mouse doesn't close it); opening stays click-only.
     function handleHover(pos, isHorizontal, shellPopouts): void {
         var p = shellPopouts ?? popouts;
         if (!p || p.currentName !== widgetId || p.hasCurrent !== true) return;
         p.currentCenter = _centerAlongBar();
     }
 
-    // Shortcut / IPC: act only on the bar of the screen the cursor is on.
-    // The shell does not pass `screen` to widgets, but its popout container has one.
     function _isActiveScreen(): bool {
         var s = screen ?? (popouts ? popouts.screen : null);
         if (!s) return true;
