@@ -12,6 +12,57 @@ function parseList(raw) {
   }
 }
 
+function failure(code, message) {
+  return { ok: false, entries: [], error: { code: code, message: message } }
+}
+
+function normalizeList(parsed) {
+  var p = parsed || {}
+  return {
+    ok: p.ok === true,
+    entries: Array.isArray(p.entries) ? p.entries : [],
+    error: p.error || null,
+    warning: p.warning ? String(p.warning) : "",
+    skipped: Array.isArray(p.skipped) ? p.skipped : []
+  }
+}
+
+function listResult(raw, exitCode, crashed, timedOut) {
+  if (timedOut) return normalizeList(failure("HELPER_TIMEOUT", "Helper timed out"))
+  if (crashed) return normalizeList(failure("HELPER_CRASHED", "Helper crashed"))
+  if (exitCode !== 0 && !String(raw || "").trim())
+    return normalizeList(failure("HELPER_FAILED", "Helper exited with code " + exitCode))
+  return normalizeList(parseList(raw))
+}
+
+function isToken(s) {
+  return /^[0-9a-f]{64}$/.test(String(s))
+}
+
+function parseUnlock(raw) {
+  var bad = { ok: false, status: "error", token: "", waitSec: 0 }
+  var s = String(raw || "")
+  if (s.length > 256) return bad
+  var data
+  try {
+    data = JSON.parse(s)
+  } catch (e) {
+    return bad
+  }
+  if (!data || typeof data !== "object") return bad
+  var out = {
+    ok: data.ok === true,
+    status: String(data.status || "error"),
+    token: "",
+    waitSec: Math.max(0, parseInt(data.waitSec, 10) || 0)
+  }
+  if (out.status === "unlocked") {
+    if (!out.ok || !isToken(data.token)) return bad
+    out.token = String(data.token)
+  }
+  return out
+}
+
 function isCode(s) {
   return /^[0-9]{1,10}$/.test(String(s))
 }
