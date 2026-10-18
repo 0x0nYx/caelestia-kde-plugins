@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import argparse
@@ -10,13 +10,16 @@ import selectors
 import shutil
 import signal
 import sqlite3
-import stat
 import struct
 import subprocess
 import sys
 import tempfile
 import time
 from pathlib import Path
+
+sys.dont_write_bytecode = True
+
+import protonauth_state as state
 
 __version__ = "3.0.0"
 
@@ -445,35 +448,16 @@ def secret_service_present() -> bool:
             return b"true" in out
     return True
 
-def _unlock_required() -> bool:
-    xdg = os.environ.get("XDG_STATE_HOME", "")
-    base = Path(xdg) if xdg.startswith("/") else Path.home() / ".local/state"
-    return (base / "proton-authenticator" / "unlock.json").exists()
-
 def require_unlock_token() -> None:
     """If an unlock code is set, refuse to emit codes without a live session token (stdin, 1st line)."""
-    if not _unlock_required():
-        return
-    import hashlib, hmac
-    token = sys.stdin.buffer.readline(200).decode("ascii", "ignore").strip()
-    rt = os.environ.get("XDG_RUNTIME_DIR", "")
-    xdg = os.environ.get("XDG_STATE_HOME", "")
-    state = (Path(xdg) if xdg.startswith("/") else Path.home() / ".local/state") / "proton-authenticator"
-    for d in ([Path(rt) / "proton-authenticator"] if rt.startswith("/") else []) + [state]:
-        f = d / "session.json"
-        try:
-            st = os.lstat(f)
-            if st.st_uid != os.getuid() or not stat.S_ISREG(st.st_mode):
-                continue
-            data = json.loads(f.read_bytes()[:1024])
-            good = (len(token) == 64 and hmac.compare_digest(
-                hashlib.sha256(token.encode()).hexdigest(), str(data.get("h", ""))))
-            if good and time.time() < float(data.get("exp", 0)):
-                data["exp"] = time.time() + 300   # sliding expiry
-                f.write_text(json.dumps(data))
-                return
-        except (OSError, ValueError):
-            continue
+    try:
+        if not state.unlock_configured():
+            return
+        token = sys.stdin.buffer.readline(200).decode("ascii", "ignore").strip()
+        if state.check_session(token):
+            return
+    except state.StateError as e:
+        raise Err("STATE_UNSAFE", str(e)) from e
     raise Err("LOCKED", "Unlock code required")
 
 def main() -> int:
