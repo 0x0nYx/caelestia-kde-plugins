@@ -3,7 +3,7 @@
   "name": "Proton Authenticator",
   "description": "Search and copy Proton Authenticator 2FA codes from a panel in Caelestia. Requires Proton Authenticator. (AUR, .deb, rpm etc any version of the app works.)",
   "icon": "icon.svg",
-  "mediaurl": "image.png",
+  "mediaurl": "image1.png",
   "screenshots": [
     "image1.png"
   ],
