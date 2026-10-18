@@ -6,22 +6,22 @@ import qs.components
 import qs.services
 import "."
 
-// Taskbar button. Clicking it (or the global shortcut) reveals Popout.qml in the
-// shell's sliding popout container by setting popouts.currentName to this widget's id.
 Item {
     id: root
 
     property var screen
     property var popouts
 
-    readonly property string widgetId: "protonAuthenticator"   // must match barWidgets[].id
+    readonly property string widgetId: "protonAuthenticator"
+    readonly property string _key: String(root)
     readonly property bool active: popouts ? (popouts.currentName === widgetId && popouts.hasCurrent === true) : false
 
     implicitWidth: 32
     implicitHeight: 32
 
-    onActiveChanged: ProtonBridge.shownCount += active ? 1 : -1
-    Component.onDestruction: if (active) ProtonBridge.shownCount -= 1
+    onActiveChanged: ProtonBridge.setShown(_key, active)
+    Component.onCompleted: ProtonBridge.setShown(_key, active)
+    Component.onDestruction: ProtonBridge.setShown(_key, false)
 
     function _centerAlongBar(): real {
         var p = root.mapToItem(null, root.width / 2, root.height / 2);
@@ -31,14 +31,13 @@ Item {
 
     function setOpen(open: bool): void {
         if (!popouts) return;
-        console.log("PA-BAR click open=" + open + " name=" + popouts.currentName + " has=" + popouts.hasCurrent + " active=" + active);
         if (open) popouts.currentCenter = _centerAlongBar();
         popouts.currentName = open ? widgetId : "";
         popouts.hasCurrent = open;
     }
 
-    function handleHover(pos, isHorizontal, shellPopouts): void {
-        var p = shellPopouts ?? popouts;
+    function handleHover(): void {
+        var p = arguments[2] ?? popouts;
         if (!p || p.currentName !== widgetId || p.hasCurrent !== true) return;
         p.currentCenter = _centerAlongBar();
     }
