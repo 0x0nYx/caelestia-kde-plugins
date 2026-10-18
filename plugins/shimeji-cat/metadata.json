@@ -5,6 +5,7 @@
   "icon": "icon.png",
   "version": "1.0.1",
   "type": "quickshell",
+  "restart": true,
   "backgroundWidgets": [
     {
       "id": "shimeji-cat",
