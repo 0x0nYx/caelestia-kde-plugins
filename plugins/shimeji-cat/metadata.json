@@ -5,12 +5,22 @@
   "icon": "icon.png",
   "version": "1.0.1",
   "type": "quickshell",
-  "ui": "",
   "backgroundWidgets": [
     {
       "id": "shimeji-cat",
       "name": "Shimeji Cat",
       "component": "ShimejiCat.qml"
+    }
+  ],
+  "settings": [
+    {
+      "id": "petCount",
+      "label": "Cat count",
+      "type": "number",
+      "default": 1,
+      "min": 1,
+      "max": 10,
+      "step": 1
     }
   ],
   "author": {

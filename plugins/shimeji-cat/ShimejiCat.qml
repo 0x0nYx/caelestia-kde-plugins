@@ -1,4 +1,5 @@
 import QtQuick
+import QtCore
 import QtQml
 import Quickshell
 import Quickshell.Wayland
@@ -16,7 +17,7 @@ Item {
     // with a "root:/..." path, a "~/..." path, or an absolute path.
     property string spritePath: "sprites/"
     // Number of cats on this screen.
-    property int petCount: 1
+    property int petCount: pluginSettings.petCount > 0 ? pluginSettings.petCount : 1
 
     // The shell's taskbar, so the cat walks on top of it instead of under it.
     // Falls back to the full screen when no bar is registered for this screen.
@@ -62,6 +63,13 @@ Item {
     }
 
     readonly property string spriteDir: resolveSpriteDir()
+
+    Settings {
+        id: pluginSettings
+
+        category: "Plugin_shimeji-cat"
+        property int petCount: 1
+    }
 
     Item {
         id: spriteContainer
