@@ -1,7 +1,7 @@
 {
   "format": "caelestia-plugin-index",
   "version": 1,
-  "generated": "2026-10-14T19:55:43Z",
+  "generated": "2026-10-18T13:30:11Z",
   "plugins": [
     {
       "id": "shimeji-cat",
@@ -9,8 +9,26 @@
       "name": "Shimeji Cat",
       "description": "A little cat that lives on your desktop, wanders around, sits on the taskbar, and can be picked up and tossed with the mouse.",
       "icon": "icon.png",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "type": "quickshell",
+      "backgroundWidgets": [
+        {
+          "id": "shimeji-cat",
+          "name": "Shimeji Cat",
+          "component": "ShimejiCat.qml"
+        }
+      ],
+      "settings": [
+        {
+          "id": "petCount",
+          "label": "Cat count",
+          "type": "number",
+          "default": 1,
+          "min": 1,
+          "max": 10,
+          "step": 1
+        }
+      ],
       "author": {
         "name": "0xSolanaceae",
         "url": "https://github.com/0xSolanaceae"
