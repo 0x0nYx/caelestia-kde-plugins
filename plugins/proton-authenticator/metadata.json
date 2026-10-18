@@ -5,13 +5,31 @@
   "icon": "icon.svg",
   "version": "1.0.0",
   "type": "quickshell",
+  "ui": "main.qml",
   "author": {
     "name": "Sliver10",
     "url": "https://github.com/Sliver10"
   },
   "license": "GPL-3.0-or-later",
-  "keywords": ["2fa", "totp", "otp", "authenticator", "proton", "security"],
+  "keywords": [
+    "2fa",
+    "totp",
+    "otp",
+    "authenticator",
+    "proton",
+    "security"
+  ],
   "shell-compat": {
     "min": "2.6"
-  }
+  },
+  "barWidgets": [
+    {
+      "id": "protonAuthenticator",
+      "name": "Proton Authenticator",
+      "icon": "key",
+      "defaultZone": "right",
+      "component": "BarWidget.qml",
+      "popout": "Popout.qml"
+    }
+  ]
 }
