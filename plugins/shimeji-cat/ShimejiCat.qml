@@ -5,10 +5,11 @@ import Quickshell.Wayland
 import Caelestia.Config
 import qs.services
 
-PanelWindow {
+Item {
     id: root
 
-    required property var modelData
+    property ShellScreen screen: null
+    property var modelData: screen
 
     // Directory holding the sprite frames. The default points at the frames
     // bundled with this plugin (resolved relative to this folder). Override
@@ -19,12 +20,12 @@ PanelWindow {
 
     // The shell's taskbar, so the cat walks on top of it instead of under it.
     // Falls back to the full screen when no bar is registered for this screen.
-    readonly property var barWrapper: Visibilities.bars.get(root.screen.name)
+    readonly property var barWrapper: Visibilities.bars.get(root.screen?.name ?? "")
     readonly property int barThickness: barWrapper ? barWrapper.visualThickness : 0
     readonly property rect playArea: {
         const t = barThickness;
-        const w = root.screen.width;
-        const h = root.screen.height;
+        const w = root.width > 0 ? root.width : (root.screen?.width ?? 0);
+        const h = root.height > 0 ? root.height : (root.screen?.height ?? 0);
         switch (Config.bar.position) {
             case "left": return Qt.rect(t, 0, w - t, h);
             case "right": return Qt.rect(0, 0, w - t, h);
@@ -34,19 +35,7 @@ PanelWindow {
         }
     }
 
-    screen: modelData
-    color: "transparent"
-
-    WlrLayershell.layer: WlrLayer.Bottom
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-    exclusionMode: ExclusionMode.Ignore
-
-    anchors {
-        left: true
-        right: true
-        top: true
-        bottom: true
-    }
+    anchors.fill: parent
 
     function shellBase() {
         if (typeof Quickshell.shellDir === "string" && Quickshell.shellDir)
@@ -98,15 +87,13 @@ PanelWindow {
         }
     }
 
-    mask: Region {
-        regions: {
-            let arr = [];
-            for (let i = 0; i < spriteRegions.count; i++) {
-                let obj = spriteRegions.objectAt(i);
-                if (obj)
-                    arr.push(obj);
-            }
-            return arr;
+    readonly property var inputRegions: {
+        let arr = [];
+        for (let i = 0; i < spriteRegions.count; i++) {
+            let obj = spriteRegions.objectAt(i);
+            if (obj)
+                arr.push(obj);
         }
+        return arr;
     }
 }

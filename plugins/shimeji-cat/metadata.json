@@ -3,14 +3,28 @@
   "name": "Shimeji Cat",
   "description": "A little cat that lives on your desktop, wanders around, sits on the taskbar, and can be picked up and tossed with the mouse.",
   "icon": "icon.png",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "quickshell",
+  "ui": "",
+  "backgroundWidgets": [
+    {
+      "id": "shimeji-cat",
+      "name": "Shimeji Cat",
+      "component": "ShimejiCat.qml"
+    }
+  ],
   "author": {
     "name": "0xSolanaceae",
     "url": "https://github.com/0xSolanaceae"
   },
   "license": "GPL-3.0-or-later",
-  "keywords": ["shimeji", "cat", "pet", "desktop", "mascot"],
+  "keywords": [
+    "shimeji",
+    "cat",
+    "pet",
+    "desktop",
+    "mascot"
+  ],
   "shell-compat": {
     "min": "2.3"
   }
