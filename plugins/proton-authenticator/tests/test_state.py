@@ -186,6 +186,13 @@ class PrefsTests(StateTestCase):
         path = self.state_home / state.APP_ID / "prefs.json"
         self.assertEqual(stat.S_IMODE(os.lstat(path).st_mode), 0o600)
 
+    def test_unsafe_state_dir_replies_with_json_error(self):
+        os.chmod(state.state_dir(create=True), 0o755)
+        for argv in (("read",), ("write",)):
+            rc, reply = run_main(self.prefs, *argv, stdin="{}")
+            self.assertEqual(rc, 1)
+            self.assertEqual(reply["error"]["code"], "STATE_UNSAFE")
+
     def test_unknown_command_is_a_usage_error(self):
         out = io.StringIO()
         with contextlib.redirect_stderr(out):
@@ -254,6 +261,13 @@ class UnlockTests(StateTestCase):
             rc, reply = self.run_cmd("reset", stdin="root-pass\n")
         self.assertEqual((rc, reply["status"], reply["ok"]), (0, "reset", True))
         self.assertEqual(self.run_cmd("status")[1]["status"], "unset")
+
+    def test_unsafe_state_dir_replies_with_json(self):
+        os.chmod(state.state_dir(create=True), 0o755)
+        for cmd in ("status", "verify"):
+            rc, reply = self.run_cmd(cmd, stdin="secret1\n")
+            self.assertEqual((rc, reply["status"], reply["ok"]), (1, "unsafe", False))
+            self.assertIn("chmod 700", reply["message"])
 
     def test_every_reply_has_the_same_four_fields(self):
         self.run_cmd("create", stdin="secret1\n")

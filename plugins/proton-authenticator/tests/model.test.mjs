@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs"
 
 const names = [
   "parseList", "failure", "normalizeList", "listResult", "isToken", "parseUnlock",
-  "isCode", "asBool", "formatCode", "entryKey", "codeState", "refreshAt",
+  "isCode", "formatCode", "entryKey", "codeState", "refreshAt",
   "matchScore", "rankEntries", "errorHint"
 ]
 const source = readFileSync(new URL("../Model.js", import.meta.url), "utf8").replace(/^\.pragma library\s*$/m, "")
@@ -21,14 +21,6 @@ test("isCode accepts 1-10 digits only", () => {
   assert.equal(M.isCode("12 34"), false)
   assert.equal(M.isCode("12a456"), false)
   assert.equal(M.isCode(null), false)
-})
-
-test("asBool is strict", () => {
-  assert.equal(M.asBool(true), true)
-  assert.equal(M.asBool("true"), true)
-  assert.equal(M.asBool("false"), false)
-  assert.equal(M.asBool(1), false)
-  assert.equal(M.asBool(undefined), false)
 })
 
 test("formatCode groups 6 and 8 digit codes", () => {
@@ -200,4 +192,15 @@ test("errorHint formats known codes and falls back to the message", () => {
   assert.match(M.errorHint({ code: "KEY_MISSING", message: "no item" }), /^Vault key not in keyring.*KEY_MISSING: no item/)
   assert.match(M.errorHint({ code: "DEPS_MISSING", message: "DEPS_MISSING" }), /\(DEPS_MISSING\)$/)
   assert.equal(M.errorHint({ code: "WHAT", message: "plain" }), "plain")
+})
+
+test("errorHint knows the helper and state failures", () => {
+  for (const code of ["HELPER_CRASHED", "HELPER_FAILED", "STATE_UNSAFE"])
+    assert.match(M.errorHint({ code, message: "x" }), new RegExp(`\\(${code}: x\\)$`))
+})
+
+test("parseUnlock keeps a short message for unsafe state", () => {
+  const r = M.parseUnlock('{"ok":false,"status":"unsafe","token":"","waitSec":0,"message":"bad dir"}')
+  assert.equal(r.status, "unsafe")
+  assert.equal(r.message, "bad dir")
 })
