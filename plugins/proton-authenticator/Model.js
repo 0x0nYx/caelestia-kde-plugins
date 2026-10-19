@@ -60,15 +60,12 @@ function parseUnlock(raw) {
     if (!out.ok || !isToken(data.token)) return bad
     out.token = String(data.token)
   }
+  if (data.message) out.message = String(data.message).slice(0, 100)
   return out
 }
 
 function isCode(s) {
   return /^[0-9]{1,10}$/.test(String(s))
-}
-
-function asBool(v) {
-  return v === true || v === "true"
 }
 
 function formatCode(code) {
@@ -162,7 +159,10 @@ function errorHint(error) {
     UNSUPPORTED_SCHEMA: "Unsupported Proton Authenticator version",
     HELPER_TIMEOUT: "Timed out reading the vault or keyring. Unlock the keyring and retry",
     OUTPUT_TOO_LARGE: "Vault too large to display",
-    DECRYPT_FAILED: "Could not decrypt the vault"
+    DECRYPT_FAILED: "Could not decrypt the vault",
+    HELPER_CRASHED: "The helper crashed. Check that python3 and its dependencies work, then retry",
+    HELPER_FAILED: "The helper failed to run. Check that python3 is installed and the plugin files are intact",
+    STATE_UNSAFE: "Unsafe state directory. Fix it (chmod 700 ~/.local/state/proton-authenticator) and retry"
   }
   var hint = hints[code] || ""
   var msg = String(error.message || code || "Error")

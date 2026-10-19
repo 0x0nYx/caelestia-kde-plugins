@@ -30,8 +30,8 @@ Item {
     }
 
     readonly property string sortMode: ["recent", "alpha", "vault"].indexOf(String(cfg.sortMode)) >= 0 ? String(cfg.sortMode) : "recent"
-    readonly property bool closeOnCopy: Model.asBool(cfg.closeOnCopy)
-    readonly property bool toastOnCopy: Model.asBool(cfg.toastOnCopy)
+    readonly property bool closeOnCopy: cfg.closeOnCopy
+    readonly property bool toastOnCopy: cfg.toastOnCopy
     readonly property int clipboardClearSec: {
         var n = parseInt(String(cfg.clipboardClearSec), 10);
         return (isFinite(n) && n >= 0) ? Math.min(n, 600) : 20;
@@ -43,7 +43,6 @@ Item {
     property string copiedKey: ""
     property real nowSec: Date.now() / 1000
 
-    // unlock code
     property bool locked: true
     property string mode: "checking"
     property string unlockError: ""
@@ -52,6 +51,7 @@ Item {
     property string _token: ""
 
     readonly property var unlockCmd: ({ create: "create", unlock: "verify", reset: "reset" })
+    readonly property var unlockCmdNames: ["create", "verify", "reset"]
     readonly property var labels: ({
         checking: { title: qsTr("Enter unlock code"), placeholder: qsTr("Unlock code"), action: qsTr("Unlock"), toggle: "" },
         unlock: { title: qsTr("Enter unlock code"), placeholder: qsTr("Unlock code"), action: qsTr("Unlock"), toggle: qsTr("Forgot code?") },
@@ -64,6 +64,8 @@ Item {
         _token = "";
         locked = true;
         unlockError = "";
+        svc.cancel();
+        forgetTimer.restart();
         if (mode === "reset") mode = "unlock";
         if (mode === "unlock" || mode === "create") return;
         unlockStatus();
@@ -105,6 +107,7 @@ Item {
             _token = r.token;
             mode = "unlock";
             locked = false;
+            forgetTimer.stop();
             nowSec = Date.now() / 1000;
             svc.refresh();
             idleTimer.restart();
@@ -112,6 +115,16 @@ Item {
             unlockError = qsTr("Too many attempts. Try again in %1 s").arg(r.waitSec || 30);
         } else if (r.status === "bad") {
             unlockError = mode === "reset" ? qsTr("Wrong password") : qsTr("Wrong code");
+        } else if (r.status === "exists") {
+            mode = "unlock";
+            unlockError = qsTr("An unlock code is already set");
+        } else if (r.status === "missing") {
+            mode = "create";
+            unlockError = qsTr("No unlock code is set. Create one");
+        } else if (r.status === "invalid") {
+            unlockError = qsTr("Use 6 to 128 characters");
+        } else if (r.status === "unsafe") {
+            unlockError = r.message ? qsTr("Unsafe state directory: %1").arg(r.message) : qsTr("Unsafe state directory");
         } else {
             unlockError = qsTr("Could not unlock");
         }
@@ -125,13 +138,13 @@ Item {
             onStreamFinished: root._unlockDone(text)
         }
         onStarted: {
-            if (root._unlockSecret.length > 0) write(root._unlockSecret + "\n");
+            var sub = command.length > 1 ? String(command[1]) : "";
+            if (root._unlockSecret.length > 0 && root.unlockCmdNames.indexOf(sub) >= 0) write(root._unlockSecret + "\n");
             root._unlockSecret = "";
             stdinEnabled = false;
         }
     }
 
-    // Relock after inactivity
     Timer { id: idleTimer; interval: 45000; onTriggered: root.lock() }
 
     function close(): void { ProtonBridge.close(); }
@@ -139,6 +152,7 @@ Item {
     Connections {
         target: ProtonBridge
         function onRefreshRequested() { if (root.opened && !root.locked) svc.refresh(); }
+        function onCopyResult(ok, reason, label, toast) { root._onCopyResult(ok); }
     }
 
     Component.onCompleted: loadPrefs()
@@ -151,6 +165,18 @@ Item {
     property var used: ({})
     property bool _prefsDirty: false
     property bool _prefsTouched: false
+    property string prefsError: ""
+
+    function _prefsReply(text: string): void {
+        var t = String(text || "").trim();
+        if (!t.length) { prefsError = ""; return; }
+        try {
+            const d = JSON.parse(t.length <= 4096 ? t : "");
+            prefsError = (d && d.error) ? Model.errorHint(d.error) : "";
+        } catch (e) {
+            prefsError = "";
+        }
+    }
 
     function loadPrefs(): void {
         if (prefsRead.running || !ProtonPaths.ready) return;
@@ -175,7 +201,8 @@ Item {
             onStreamFinished: {
                 if (root._prefsTouched) return;
                 try {
-                    var d = JSON.parse(text.length <= 262144 ? text : "");
+                    const d = JSON.parse(text.length <= 262144 ? text : "");
+                    root.prefsError = (d && d.error) ? Model.errorHint(d.error) : "";
                     root.pins = (d && typeof d.pins === "object" && d.pins) ? d.pins : {};
                     root.used = (d && typeof d.used === "object" && d.used) ? d.used : {};
                 } catch (e) {
@@ -189,6 +216,10 @@ Item {
     Process {
         id: prefsWrite
         stdinEnabled: false
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: root._prefsReply(text)
+        }
         onStarted: {
             write(JSON.stringify({ pins: root.pins, used: root.used }) + "\n");
             stdinEnabled = false;
@@ -228,6 +259,7 @@ Item {
             return qsTr("%n account(s) could not be read: %1", "", svc.result.skipped.length).arg(svc.result.skipped.slice(0, 3).join(", "));
         if (svc.result.warning === "FALLBACK_KEY")
             return qsTr("Proton Authenticator is using its unprotected fallback key. Open it and choose “Secure now”.");
+        if (prefsError.length > 0) return qsTr("Pins and recents are not being saved. %1").arg(prefsError);
         return "";
     }
 
@@ -249,14 +281,18 @@ Item {
         if (locked) return;
         code = String(code || "").replace(/\s+/g, "");
         if (!Model.isCode(code)) return;
-        copiedKey = Model.entryKey(entry);
+        _copyKey = Model.entryKey(entry);
+        _copyLabel = String(entry.issuer || qsTr("Account"));
         markUsed(entry);
+        ProtonBridge.copy(code, clipboardClearSec, _copyLabel, toastOnCopy);
+    }
 
-        ProtonBridge.copy(code, clipboardClearSec);
-        if (toastOnCopy) {
-            var label = String(entry.issuer || qsTr("Account"));
-            Toaster.toast(qsTr("Copied code"), label, "key", Toast.Success);
-        }
+    property string _copyKey: ""
+    property string _copyLabel: ""
+
+    function _onCopyResult(ok: bool): void {
+        if (!ok) return;
+        copiedKey = _copyKey;
         if (closeOnCopy) closeAfterCopy.restart(); else copiedTimer.restart();
     }
 
@@ -284,7 +320,7 @@ Item {
 
     Service {
         id: svc
-        settings: ({ demoMode: cfg.demoMode })
+        demoMode: cfg.demoMode
         token: root._token
     }
 

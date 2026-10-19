@@ -27,7 +27,7 @@ StyledRect {
 
     TextMetrics {
         id: codeMetrics
-        font.family: Appearance.font.family.mono
+        font.family: Tokens.font.mono.medium.family
         font.pointSize: Tokens.font.title.small.pointSize
         font.weight: Font.Medium
         text: "0000 0000"
@@ -100,7 +100,7 @@ StyledRect {
                 font.features: { "tnum": 1 }
                 text: (row.masked || row.st.stale) ? "··· ···" : Model.formatCode(row.st.code)
                 color: row.ending ? Colours.palette.m3error : Colours.palette.m3onSurface
-                font.family: Appearance.font.family.mono
+                font.family: Tokens.font.mono.medium.family
                 font.pointSize: Tokens.font.title.small.pointSize
                 font.weight: Font.Medium
             }

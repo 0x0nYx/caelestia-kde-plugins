@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell
 import Quickshell.Io
 import "Model.js" as Model
 import "."
@@ -7,7 +6,7 @@ import "."
 Item {
     id: root
 
-    property var settings: ({})
+    property bool demoMode: false
     property string token: ""
 
     property int window: 3
@@ -17,18 +16,23 @@ Item {
 
     property real refreshAt: Infinity
 
-    readonly property bool demoMode: Model.asBool(settings ? settings.demoMode : false)
-
     property string _out: ""
     property bool _timedOut: false
+    property int _epoch: 0
+    property int _runEpoch: 0
+    property bool _wantRefresh: false
 
     function _run(args) {
-        if (listProcess.running) return
+        if (listProcess.running) {
+            if (_runEpoch !== _epoch) _wantRefresh = true
+            return
+        }
 
         if (!ProtonPaths.ready) return
         refreshing = true
         _out = ""
         _timedOut = false
+        _runEpoch = _epoch
         listProcess.command = [ProtonPaths.list].concat(args)
         listProcess.stdinEnabled = true
         listProcess.running = true
@@ -42,12 +46,26 @@ Item {
         if (!listProcess.running && nowSec >= refreshAt) refresh()
     }
 
+    function cancel() {
+        _epoch += 1
+        _out = ""
+        refreshing = false
+        if (listProcess.running) listProcess.running = false
+    }
+
     function forget() {
+        cancel()
         result = Model.normalizeList(null)
         refreshAt = Infinity
     }
 
     function apply(exitCode, exitStatus) {
+        if (_runEpoch !== _epoch) {
+            _out = ""
+            refreshing = false
+            if (_wantRefresh) { _wantRefresh = false; refresh() }
+            return
+        }
         result = Model.listResult(_out, exitCode, exitStatus !== 0, _timedOut)
         _out = ""
 
@@ -63,7 +81,7 @@ Item {
         onStarted: { write(root.token + "\n"); stdinEnabled = false; }
         stdout: StdioCollector {
             waitForEnd: true
-            onStreamFinished: root._out = text
+            onStreamFinished: if (root._runEpoch === root._epoch) root._out = text
         }
         onExited: (exitCode, exitStatus) => root.apply(exitCode, exitStatus)
     }
