@@ -1,0 +1,39 @@
+#!/bin/sh
+set -u
+LC_ALL=C
+export LC_ALL
+
+missing() {
+  printf 'DEPS_MISSING %s\n' "$1"
+  exit 0
+}
+
+WL_PASTE=$(command -v wl-paste) || missing wl-paste
+HEAD=$(command -v head) || missing head
+TIMEOUT=$(command -v timeout) || missing timeout
+OD=$(command -v od) || missing od
+TR=$(command -v tr) || missing tr
+
+nomatch() {
+  printf 'nomatch\n'
+  exit 0
+}
+
+hex() { "$OD" -An -v -tx1 | "$TR" -d ' \n'; }
+
+want=$("$HEAD" -c 11)
+case $want in
+  '' | *[!0-9]*) nomatch ;;
+  *) ;;
+esac
+[ "${#want}" -le 10 ] || nomatch
+
+limit=$((${#want} + 1))
+got=$("$TIMEOUT" -k 1 2 "$WL_PASTE" --no-newline --type text 2>/dev/null | "$HEAD" -c "$limit" | hex)
+expected=$(printf '%s' "$want" | hex)
+
+if [ -n "$got" ] && [ "$got" = "$expected" ]; then
+  printf 'match\n'
+else
+  printf 'nomatch\n'
+fi

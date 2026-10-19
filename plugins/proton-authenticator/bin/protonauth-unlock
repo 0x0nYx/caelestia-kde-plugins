@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import ctypes
+import ctypes.util
+import hashlib
+import hmac
+import json
+import os
+import secrets
+import sys
+import time
+
+sys.dont_write_bytecode = True
+
+import protonauth_state as state
+
+MIN_LEN, MAX_LEN = 6, 128
+N, R, P = 2**15, 8, 1
+DELAYS = [30, 60, 300, 900]
+PAM_SERVICE = "login"
+
+def load() -> dict | None:
+    d = state.state_dir()
+    if d is None:
+        return None
+    raw = state.read_private(d, "unlock.json", 4096)
+    if raw is None:
+        return None
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        return None
+    return data if isinstance(data, dict) else None
+
+def save(data: dict) -> None:
+    state.atomic_write(state.ensure_state_dir(), "unlock.json", json.dumps(data, separators=(",", ":")).encode())
+
+def emit(status: str, ok: bool = False, token: str = "", wait: int = 0, message: str = "") -> None:
+    reply = {"ok": ok, "status": status, "token": token, "waitSec": wait}
+    if message:
+        reply["message"] = message[:100]
+    print(json.dumps(reply, separators=(",", ":"), ensure_ascii=False))
+
+def pam_check(user: str, password: str) -> bool:
+    name = ctypes.util.find_library("pam")
+    if not name:
+        return False
+    pam, libc = ctypes.CDLL(name), ctypes.CDLL(ctypes.util.find_library("c"))
+    libc.calloc.restype, libc.calloc.argtypes = ctypes.c_void_p, [ctypes.c_size_t, ctypes.c_size_t]
+    libc.strdup.restype, libc.strdup.argtypes = ctypes.c_void_p, [ctypes.c_char_p]
+
+    class Msg(ctypes.Structure):
+        _fields_ = [("style", ctypes.c_int), ("msg", ctypes.c_char_p)]
+
+    class Resp(ctypes.Structure):
+        _fields_ = [("resp", ctypes.c_void_p), ("retcode", ctypes.c_int)]
+
+    Conv = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.POINTER(Msg)),
+                            ctypes.POINTER(ctypes.POINTER(Resp)), ctypes.c_void_p)
+
+    class PamConv(ctypes.Structure):
+        _fields_ = [("conv", Conv), ("data", ctypes.c_void_p)]
+
+    pw = password.encode()
+
+    def conv(n, msgs, out, _data):
+        arr = libc.calloc(n, ctypes.sizeof(Resp))
+        if not arr:
+            return 5
+        resp = ctypes.cast(arr, ctypes.POINTER(Resp))
+        for i in range(n):
+            if msgs[i].contents.style in (1, 2):
+                resp[i].resp = libc.strdup(pw)
+        out[0] = resp
+        return 0
+
+    cb = Conv(conv)
+    pam.pam_start.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.POINTER(PamConv),
+                              ctypes.POINTER(ctypes.c_void_p)]
+    pam.pam_authenticate.argtypes = [ctypes.c_void_p, ctypes.c_int]
+    pam.pam_end.argtypes = [ctypes.c_void_p, ctypes.c_int]
+    handle = ctypes.c_void_p()
+    conv_s = PamConv(cb, None)
+    if pam.pam_start(PAM_SERVICE.encode(), user.encode(), ctypes.byref(conv_s), ctypes.byref(handle)) != 0:
+        return False
+    rc = pam.pam_authenticate(handle, 0)
+    pam.pam_end(handle, rc)
+    return rc == 0
+
+def kdf(code: str, salt: bytes) -> bytes:
+    return hashlib.scrypt(code.encode(), salt=salt, n=N, r=R, p=P, maxmem=64 * 1024 * 1024, dklen=32)
+
+def main() -> int:
+    try:
+        return run()
+    except state.StateError as e:
+        emit("unsafe", message=str(e))
+        return 1
+
+def run() -> int:
+    cmd = sys.argv[1] if len(sys.argv) == 2 else ""
+    cur = load()
+    if cmd == "status":
+        emit("set" if cur and "salt" in cur and "hash" in cur else "unset", ok=True)
+        return 0
+    if cmd == "lock":
+        state.end_session()
+        emit("locked", ok=True)
+        return 0
+    code = sys.stdin.buffer.read(MAX_LEN * 4 + 1).decode("utf-8", "ignore").rstrip("\r\n")
+    if cmd == "create":
+        if cur and "hash" in cur:
+            emit("exists")
+            return 1
+        if not (MIN_LEN <= len(code) <= MAX_LEN):
+            emit("invalid")
+            return 1
+        salt = secrets.token_bytes(16)
+        save({"v": 1, "n": N, "r": R, "p": P, "salt": salt.hex(), "hash": kdf(code, salt).hex(),
+              "fails": 0, "until": 0})
+        emit("unlocked", ok=True, token=state.start_session())
+        return 0
+    if cmd == "verify":
+        if not cur or "hash" not in cur:
+            emit("missing")
+            return 1
+        now = time.time()
+        if now < float(cur.get("until", 0)):
+            emit("wait", wait=int(cur["until"] - now) + 1)
+            return 1
+        try:
+            good = hmac.compare_digest(kdf(code, bytes.fromhex(cur["salt"])), bytes.fromhex(cur["hash"]))
+        except (ValueError, KeyError):
+            emit("missing")
+            return 1
+        if good:
+            cur["fails"], cur["until"] = 0, 0
+            save(cur)
+            emit("unlocked", ok=True, token=state.start_session())
+            return 0
+        fails = int(cur.get("fails", 0)) + 1
+        cur["fails"] = fails
+        wait = DELAYS[min(fails - 5, len(DELAYS) - 1)] if fails >= 5 else 0
+        cur["until"] = now + wait
+        save(cur)
+        if wait:
+            emit("wait", wait=wait)
+        else:
+            emit("bad")
+        return 1
+    if cmd == "reset":
+        if not cur or "hash" not in cur:
+            emit("missing")
+            return 1
+        now = time.time()
+        if now < float(cur.get("puntil", 0)):
+            emit("wait", wait=int(cur["puntil"] - now) + 1)
+            return 1
+        import getpass
+        if code and pam_check(getpass.getuser(), code):
+            state.end_session()
+            d = state.state_dir()
+            if d is not None:
+                try:
+                    os.unlink(d / "unlock.json")
+                except FileNotFoundError:
+                    pass
+            emit("reset", ok=True)
+            return 0
+        fails = int(cur.get("pfails", 0)) + 1
+        cur["pfails"] = fails
+        wait = DELAYS[min(fails - 5, len(DELAYS) - 1)] if fails >= 5 else 0
+        cur["puntil"] = now + wait
+        save(cur)
+        if wait:
+            emit("wait", wait=wait)
+        else:
+            emit("bad")
+        return 1
+    print("usage: protonauth-unlock status|create|verify|reset|lock", file=sys.stderr)
+    return 2
+
+if __name__ == "__main__":
+    sys.exit(main())

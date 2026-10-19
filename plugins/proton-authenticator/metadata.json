@@ -1,0 +1,39 @@
+{
+  "id": "proton-authenticator",
+  "name": "Proton Authenticator",
+  "description": "Search and copy Proton Authenticator 2FA codes from a panel in Caelestia. Requires Proton Authenticator. (AUR, .deb, rpm etc any version of the app works.)",
+  "icon": "icon.svg",
+  "mediaurl": "image1.png",
+  "screenshots": [
+    "image1.png"
+  ],
+  "version": "1.0.0",
+  "type": "quickshell",
+  "ui": "main.qml",
+  "author": {
+    "name": "Sliver10",
+    "url": "https://github.com/Sliver10"
+  },
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "2fa",
+    "totp",
+    "otp",
+    "authenticator",
+    "proton",
+    "security"
+  ],
+  "shell-compat": {
+    "min": "2.6.2"
+  },
+  "barWidgets": [
+    {
+      "id": "protonAuthenticator",
+      "name": "Proton Authenticator",
+      "icon": "key",
+      "defaultZone": "right",
+      "component": "BarWidget.qml",
+      "popout": "Popout.qml"
+    }
+  ]
+}
