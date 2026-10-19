@@ -65,6 +65,7 @@ Item {
         locked = true;
         unlockError = "";
         svc.cancel();
+        _copyRequests = ({});
         forgetTimer.restart();
         if (mode === "reset") mode = "unlock";
         if (mode === "unlock" || mode === "create") return;
@@ -152,7 +153,7 @@ Item {
     Connections {
         target: ProtonBridge
         function onRefreshRequested() { if (root.opened && !root.locked) svc.refresh(); }
-        function onCopyResult(ok, reason, label, toast) { root._onCopyResult(ok); }
+        function onCopyResult(id, ok, reason, label, toast) { root._onCopyResult(id, ok); }
     }
 
     Component.onCompleted: loadPrefs()
@@ -200,12 +201,18 @@ Item {
             waitForEnd: true
             onStreamFinished: {
                 if (root._prefsTouched) return;
+                const raw = String(text || "").trim();
+                if (!raw.length) {
+                    root.prefsError = qsTr("Could not read saved pins and recents");
+                    return;
+                }
                 try {
-                    const d = JSON.parse(text.length <= 262144 ? text : "");
+                    const d = JSON.parse(raw.length <= 262144 ? raw : "");
                     root.prefsError = (d && d.error) ? Model.errorHint(d.error) : "";
                     root.pins = (d && typeof d.pins === "object" && d.pins) ? d.pins : {};
                     root.used = (d && typeof d.used === "object" && d.used) ? d.used : {};
                 } catch (e) {
+                    root.prefsError = qsTr("Could not read saved pins and recents");
                     root.pins = {};
                     root.used = {};
                 }
@@ -281,18 +288,18 @@ Item {
         if (locked) return;
         code = String(code || "").replace(/\s+/g, "");
         if (!Model.isCode(code)) return;
-        _copyKey = Model.entryKey(entry);
-        _copyLabel = String(entry.issuer || qsTr("Account"));
-        markUsed(entry);
-        ProtonBridge.copy(code, clipboardClearSec, _copyLabel, toastOnCopy);
+        var id = ProtonBridge.copy(code, clipboardClearSec, String(entry.issuer || qsTr("Account")), toastOnCopy);
+        if (id > 0) _copyRequests[id] = { key: Model.entryKey(entry), entry: entry };
     }
 
-    property string _copyKey: ""
-    property string _copyLabel: ""
+    property var _copyRequests: ({})
 
-    function _onCopyResult(ok: bool): void {
-        if (!ok) return;
-        copiedKey = _copyKey;
+    function _onCopyResult(id: int, ok: bool): void {
+        var request = _copyRequests[id];
+        if (request) delete _copyRequests[id];
+        if (!ok || !request) return;
+        copiedKey = request.key;
+        markUsed(request.entry);
         if (closeOnCopy) closeAfterCopy.restart(); else copiedTimer.restart();
     }
 

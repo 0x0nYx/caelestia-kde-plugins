@@ -7,9 +7,7 @@ import "."
 Scope {
     id: root
 
-    property string status: ""
-
-    signal copyResult(bool ok, string reason, string label, bool toast)
+    signal copyResult(int id, bool ok, string reason, string label, bool toast)
     signal clearProblem(string reason)
 
     property string _clipboardCode: ""
@@ -17,31 +15,30 @@ Scope {
     property string _pendingCheck: ""
     property int _gen: 0
     property int _checkGen: -1
-    property var _queued: null
+    property int _nextId: 0
+    property var _queue: []
+    property var _request: null
     property bool _copying: false
-    property string _label: ""
-    property bool _toast: false
     property bool _copyTimedOut: false
     property bool _checkTimedOut: false
     property bool _checking: false
 
-    function copy(code: string, clearSec: int, label: string, toast: bool): void {
+    function copy(code: string, clearSec: int, label: string, toast: bool): int {
         code = String(code || "").replace(/\s+/g, "");
-        if (!Model.isCode(code)) return;
+        if (!Model.isCode(code)) return 0;
+        _nextId += 1;
+        var request = { id: _nextId, code: code, clearSec: clearSec, label: label, toast: toast };
         if (copyProcess.running || clearProcess.running || _copying) {
-            _queued = { code: code, clearSec: clearSec, label: label, toast: toast };
-            return;
+            _queue.push(request);
+            return request.id;
         }
-        _start(code, clearSec, label, toast);
+        _start(request);
+        return request.id;
     }
 
     function clearIfOurs(): void {
         if (!_clipboardCode || clipboardCheck.running || !ProtonPaths.ready) return;
-        if (_copying || copyProcess.running || clearProcess.running || _queued) {
-            clipboardClearTimer.interval = 250;
-            clipboardClearTimer.restart();
-            return;
-        }
+        if (_copying || copyProcess.running || clearProcess.running || _queue.length > 0) return;
         if (!Model.isCode(_clipboardCode)) { _clipboardCode = ""; return; }
         _pendingCheck = _clipboardCode;
         _checkGen = _gen;
@@ -52,20 +49,19 @@ Scope {
         clipboardCheck.running = true;
     }
 
-    function _start(code: string, clearSec: int, label: string, toast: bool): void {
+    function _start(request): void {
         _gen += 1;
-        _label = label;
-        _toast = toast;
-        _pendingCopy = code;
+        _request = request;
+        _pendingCopy = request.code;
         _copying = true;
         _copyTimedOut = false;
         copyWatchdog.restart();
         copyProcess.command = ["wl-copy", "--sensitive"];
         copyProcess.stdinEnabled = true;
         copyProcess.running = true;
-        _clipboardCode = code;
-        if (clearSec > 0) {
-            clipboardClearTimer.interval = Math.min(clearSec, 600) * 1000;
+        _clipboardCode = request.code;
+        if (request.clearSec > 0) {
+            clipboardClearTimer.interval = Math.min(request.clearSec, 600) * 1000;
             clipboardClearTimer.restart();
         } else {
             clipboardClearTimer.stop();
@@ -73,15 +69,17 @@ Scope {
     }
 
     function _finishCopy(ok: bool, reason: string): void {
-        if (!_copying) return;
+        if (!_copying || !_request) return;
         _copying = false;
         copyWatchdog.stop();
         _pendingCopy = "";
+        var request = _request;
+        _request = null;
         if (!ok) {
             _clipboardCode = "";
             clipboardClearTimer.stop();
         }
-        copyResult(ok, reason, _label, _toast);
+        copyResult(request.id, ok, reason, request.label, request.toast);
         _drain();
     }
 
@@ -92,7 +90,6 @@ Scope {
         clipboardCheck.stdinEnabled = false;
         var result = clipboardCheckOut.text.trim();
         var current = _checkGen === _gen;
-        status = result;
         if (result.indexOf("DEPS_MISSING") === 0) {
             clearProblem("WL_PASTE_MISSING");
         } else if (_checkTimedOut) {
@@ -108,10 +105,8 @@ Scope {
     }
 
     function _drain(): void {
-        if (!_queued || _copying || copyProcess.running || clearProcess.running) return;
-        var next = _queued;
-        _queued = null;
-        _start(next.code, next.clearSec, next.label, next.toast);
+        if (_queue.length === 0 || _copying || copyProcess.running || clearProcess.running) return;
+        _start(_queue.shift());
     }
 
     Process {
@@ -126,7 +121,6 @@ Scope {
             stdinEnabled = false;
             var ok = exitCode === 0 && exitStatus === 0 && !root._copyTimedOut;
             root._finishCopy(ok, root._copyTimedOut ? "WL_COPY_TIMEOUT" : "WL_COPY_FAILED");
-            root._drain();
         }
     }
 

@@ -15,7 +15,7 @@ Item {
     Connections {
         target: ProtonBridge
 
-        function onCopyResult(ok, reason, label, toast) {
+        function onCopyResult(id, ok, reason, label, toast) {
             if (!ok) {
                 const why = reason === "WL_COPY_TIMEOUT" ? qsTr("wl-copy did not respond") : qsTr("wl-copy failed. Is wl-clipboard installed?");
                 Toaster.toast(qsTr("Copy failed"), why, "error", Toast.Error);

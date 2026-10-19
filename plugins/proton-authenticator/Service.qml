@@ -48,6 +48,7 @@ Item {
 
     function cancel() {
         _epoch += 1
+        _wantRefresh = false
         _out = ""
         refreshing = false
         if (listProcess.running) listProcess.running = false
