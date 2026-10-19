@@ -449,7 +449,6 @@ def secret_service_present() -> bool:
     return True
 
 def require_unlock_token() -> None:
-    """If an unlock code is set, refuse to emit codes without a live session token (stdin, 1st line)."""
     try:
         if not state.unlock_configured():
             return

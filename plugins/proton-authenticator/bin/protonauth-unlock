@@ -36,8 +36,11 @@ def load() -> dict | None:
 def save(data: dict) -> None:
     state.atomic_write(state.ensure_state_dir(), "unlock.json", json.dumps(data, separators=(",", ":")).encode())
 
-def emit(status: str, ok: bool = False, token: str = "", wait: int = 0) -> None:
-    print(json.dumps({"ok": ok, "status": status, "token": token, "waitSec": wait}, separators=(",", ":")))
+def emit(status: str, ok: bool = False, token: str = "", wait: int = 0, message: str = "") -> None:
+    reply = {"ok": ok, "status": status, "token": token, "waitSec": wait}
+    if message:
+        reply["message"] = message[:100]
+    print(json.dumps(reply, separators=(",", ":"), ensure_ascii=False))
 
 def pam_check(user: str, password: str) -> bool:
     name = ctypes.util.find_library("pam")
@@ -89,6 +92,13 @@ def kdf(code: str, salt: bytes) -> bytes:
     return hashlib.scrypt(code.encode(), salt=salt, n=N, r=R, p=P, maxmem=64 * 1024 * 1024, dklen=32)
 
 def main() -> int:
+    try:
+        return run()
+    except state.StateError as e:
+        emit("unsafe", message=str(e))
+        return 1
+
+def run() -> int:
     cmd = sys.argv[1] if len(sys.argv) == 2 else ""
     cur = load()
     if cmd == "status":
