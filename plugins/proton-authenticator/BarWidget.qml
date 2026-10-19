@@ -13,14 +13,17 @@ Item {
     property var popouts
 
     readonly property string widgetId: "protonAuthenticator"
-    readonly property string _key: String(root)
+    property string _key: ""
     readonly property bool active: popouts ? (popouts.currentName === widgetId && popouts.hasCurrent === true) : false
 
     implicitWidth: 32
     implicitHeight: 32
 
-    onActiveChanged: ProtonBridge.setShown(_key, active)
-    Component.onCompleted: ProtonBridge.setShown(_key, active)
+    onActiveChanged: if (_key) ProtonBridge.setShown(_key, active)
+    Component.onCompleted: {
+        _key = ProtonBridge.newId();
+        ProtonBridge.setShown(_key, active);
+    }
     Component.onDestruction: ProtonBridge.setShown(_key, false)
 
     function _centerAlongBar(): real {
@@ -36,8 +39,8 @@ Item {
         popouts.hasCurrent = open;
     }
 
-    function handleHover(): void {
-        var p = arguments[2] ?? popouts;
+    function handleHover(_pos, _isHorizontal, shellPopouts): void {
+        var p = shellPopouts ?? popouts;
         if (!p || p.currentName !== widgetId || p.hasCurrent !== true) return;
         p.currentCenter = _centerAlongBar();
     }
