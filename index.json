@@ -1,7 +1,7 @@
 {
   "format": "caelestia-plugin-index",
   "version": 1,
-  "generated": "2026-10-19T01:26:23Z",
+  "generated": "2026-10-20T18:17:09Z",
   "plugins": [
     {
       "id": "proton-authenticator",
@@ -49,7 +49,7 @@
       "name": "Shimeji Cat",
       "description": "A little cat that lives on your desktop, wanders around, sits on the taskbar, and can be picked up and tossed with the mouse.",
       "icon": "icon.png",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "type": "quickshell",
       "restart": true,
       "backgroundWidgets": [
