@@ -40,6 +40,23 @@ targets) or the sidebar's opt-in, user-keyed provider calls - reviewed in
 the migration audit; none of it performs a surprise download or a
 privileged action.
 
+## `caelestia-assist` on `$PATH`
+
+Store installation extracts the plugin to
+`~/.config/caelestia/plugins/caelestia-assistant/`, which is not on `$PATH`.
+This plugin ships no post-install hook, so link the launcher once:
+
+```sh
+mkdir -p ~/.local/bin
+ln -sf ~/.config/caelestia/plugins/caelestia-assistant/assistant/bin/caelestia-assist \
+       ~/.local/bin/caelestia-assist
+```
+
+The launcher resolves symlinks, so it finds the `assistant` package from the
+link. `~/.local/bin` must be on `$PATH` in your shell and in the session that
+starts Quickshell; otherwise call the launcher by its absolute path from
+Quickshell `Process` runners.
+
 The upstream README follows, verbatim.
 
 ---
