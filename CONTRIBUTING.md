@@ -84,7 +84,7 @@ assistant/data/index/bm25.json   # data artifact, not code
 src/verbs.py:120-132             # string vocabulary, not a call
 ```
 
-Entries suppress hard errors for exactly those paths and lines; soft warnings still surface. Keep the list short and the reasons honest - maintainers review every entry as part of the plugin diff.
+Entries suppress hard errors for exactly those paths and lines; soft warnings still surface. Paths must stay inside the plugin folder (anything that escapes it is skipped with a warning), an entry with no line span suppresses the whole file and is reported as a warning so it stays visible in CI, and a malformed or inverted span such as `10-5` fails the check. Keep the list short and the reasons honest - maintainers review every entry as part of the plugin diff.
 
 ## Maintainer review checklist
 

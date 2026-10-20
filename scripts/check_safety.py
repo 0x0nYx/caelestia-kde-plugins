@@ -31,7 +31,11 @@ inclusive line range, followed by a '# reason' comment:
     src/verbs.py:120-132             # string vocabulary, not a call
 
 Entries suppress hard errors for exactly those paths/lines; soft warnings
-still surface. Maintainers review the file like any other part of the diff.
+still surface. Paths are normalized and must stay inside the plugin folder
+(escaping entries are skipped with a warning). An entry without a line span
+suppresses the whole file and is reported as a warning so it stays auditable;
+malformed or inverted spans (e.g. 10-5) are errors. Maintainers review the
+file like any other part of the diff.
 
 Usage:
     python scripts/check_safety.py
@@ -149,18 +153,31 @@ def iter_code_files(plugin_dir: Path):
             yield path
 
 
-def load_audit_ignore(plugin_dir: Path):
+def load_audit_ignore(plugin_dir: Path, problems=None, warnings=None):
     """Parse a plugin's optional ``.caelestia-audit-ignore`` file.
 
     Returns a list of ``(path, lo, hi)`` tuples where ``path`` is a
-    plugin-relative posix path and ``lo``/``hi`` bound an inclusive line
-    range (both ``None`` when the entry covers the whole file).
+    normalized plugin-relative posix path and ``lo``/``hi`` bound an
+    inclusive line range (both ``None`` when the entry covers the whole file).
+
+    * Entries are resolved against ``plugin_dir``; any that escape it are
+      skipped with a warning, so the file can never exempt files outside
+      the plugin.
+    * Whole-file entries (no line span) are kept but reported as warnings so
+      the exemption stays visible in CI output.
+    * Malformed or inverted spans (``10-5``, ``x``, ``0``) are reported as
+      errors and the entry is dropped.
     """
+    problems = problems if problems is not None else []
+    warnings = warnings if warnings is not None else []
     ignore_file = plugin_dir / AUDIT_IGNORE_NAME
     if not ignore_file.is_file():
         return []
+    root = plugin_dir.resolve()
+    where = f"{plugin_dir.name}/{AUDIT_IGNORE_NAME}"
     entries = []
-    for raw in ignore_file.read_text(encoding="utf-8", errors="ignore").splitlines():
+    text = ignore_file.read_text(encoding="utf-8", errors="ignore")
+    for lineno, raw in enumerate(text.splitlines(), 1):
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
@@ -171,15 +188,34 @@ def load_audit_ignore(plugin_dir: Path):
         path = path.strip()
         if not path:
             continue
+        resolved = (root / path).resolve()
+        try:
+            norm_rel = resolved.relative_to(root).as_posix()
+        except ValueError:
+            warnings.append(
+                f"{where}:{lineno}: entry {path!r} escapes the plugin "
+                "directory; ignored")
+            continue
         lo = hi = None
         span = span.strip()
         if span:
-            if "-" in span:
-                a, _, b = span.partition("-")
-                lo, hi = int(a), int(b)
-            else:
-                lo = hi = int(span)
-        entries.append((path, lo, hi))
+            a, sep, b = span.partition("-")
+            try:
+                lo = int(a)
+                hi = int(b) if sep else lo
+            except ValueError:
+                problems.append(f"{where}:{lineno}: invalid line span {span!r}")
+                continue
+            if lo < 1 or lo > hi:
+                problems.append(
+                    f"{where}:{lineno}: invalid line span {span!r} "
+                    "(need 1 <= start <= end)")
+                continue
+        else:
+            warnings.append(
+                f"{where}:{lineno}: whole-file suppression of {norm_rel!r} "
+                "(all hard safety patterns ignored)")
+        entries.append((norm_rel, lo, hi))
     return entries
 
 
@@ -318,7 +354,7 @@ def scan_sequence_gaps(plugin_dir, warnings):
 
 
 def scan_plugin(plugin_dir: Path, problems, warnings):
-    ignore_entries = load_audit_ignore(plugin_dir)
+    ignore_entries = load_audit_ignore(plugin_dir, problems, warnings)
     for path in iter_code_files(plugin_dir):
         scan_hard_patterns(path, problems, plugin_dir, ignore_entries)
         scan_soft_patterns(path, warnings)
