@@ -21,17 +21,25 @@ verbatim:
   (Python 3.12+, stdlib only, no required dependencies; optional numpy /
   onnxruntime accelerators exist, each with an identical-result pure-Python
   fallback).
-- `assistant/adapters/caelestia/shell/` - the Quickshell integration
-  surfaces: the `AiAssistant` sidebar module and the `SettingsTools` /
+- `assistant/adapters/caelestia/shell/services/` - the `SettingsTools` /
   `CommandGate` services. They import the shell's own QML module tree
-  (`qs.components`, `Caelestia.Config`, ...) and drop into the shell's
-  config tree when the user enables the integration.
+  (`qs.services`, `Caelestia.Config`, ...). The root `qmldir` registers them
+  as singletons and `main.qml` exposes them through lazy accessors.
+- `assistant/adapters/caelestia/opt-in/sidebar-legacy/AiAssistantLegacy.qml` -
+  the original monolithic sidebar module, kept as an opt-in integration
+  target only. It deliberately lives outside any path that mirrors the shell
+  tree and under a different file name, so copying the adapter files can
+  never overwrite the shell's own `modules/sidebar/AiAssistant.qml` or its
+  modular `ChatStore.qml` / `ChatMessage.qml`. It predates that modular
+  sidebar and is not wired into anything by this plugin.
 - `tests/`, `scripts/` - the upstream unittest suite (2,700+ tests) and dev
   tooling; `pyproject.toml` - upstream packaging (`pip install .`).
 
-The manifest sets no `ui` entry on purpose: the Python core is the product
-and nothing in this folder is auto-loaded into the shell. The QML surfaces
-are opt-in integration files, installed per the upstream documentation.
+The manifest sets no `ui` entry, so the shell's `PluginLoader` falls back to
+the root `main.qml`. That file is inert: it only exposes `commandGate()` /
+`settingsTools()` accessors, and it never references the legacy sidebar. The
+Python core is the product; the QML surfaces are opt-in integration files,
+installed per the upstream documentation.
 
 `.caelestia-audit-ignore` documents, line by line, the store safety
 scanner's findings inside migrated source: every one is string data
