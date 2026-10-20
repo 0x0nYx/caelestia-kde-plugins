@@ -3,7 +3,7 @@
   "name": "Shimeji Cat",
   "description": "A little cat that lives on your desktop, wanders around, sits on the taskbar, and can be picked up and tossed with the mouse.",
   "icon": "icon.png",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "quickshell",
   "restart": true,
   "backgroundWidgets": [
