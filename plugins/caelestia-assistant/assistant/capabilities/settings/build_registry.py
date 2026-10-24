@@ -22,7 +22,7 @@ from . import curations
 from .enumerate import enumerate_leaves
 from .ui_ranges_data import UI_RANGES
 
-REPO_COMMIT = "c72ef2ee3e3bb2efe265b7040e3efa89aeefc757"
+REPO_COMMIT = "9496cc3aab39296ed19c76c9e3931f63caa45e2e"
 _ENUM_NOTE = re.compile(r"enum ([A-Za-z0-9_]+)\s*:\s*([A-Za-z0-9_|]+)")
 
 

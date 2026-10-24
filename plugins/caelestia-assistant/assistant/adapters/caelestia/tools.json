@@ -1,7 +1,7 @@
 {
   "meta": {
     "generator": "assistant.capabilities.settings.build_registry",
-    "repo_commit": "c72ef2ee3e3bb2efe265b7040e3efa89aeefc757",
+    "repo_commit": "9496cc3aab39296ed19c76c9e3931f63caa45e2e",
     "notes": "Validation ranges/enums adopted exactly from the shipped Nexus controls (ui_ranges_data.py) and the C++ enum declarations; upstream declares no numeric bounds in the settings schema (type-only hook). not_exposed records every scalar leaf without a tool, with its reason.",
     "tool_count": 261,
     "group_counts": {
