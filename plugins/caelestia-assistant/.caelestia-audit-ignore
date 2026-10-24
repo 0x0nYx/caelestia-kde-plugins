@@ -31,3 +31,8 @@ assistant/adapters/caelestia/opt-in/sidebar-legacy/AiAssistantLegacy.qml:2232
 assistant/adapters/caelestia/opt-in/sidebar-legacy/AiAssistantLegacy.qml:2238
 assistant/adapters/caelestia/opt-in/sidebar-legacy/AiAssistantLegacy.qml:2359
 
+        # assistant/data/index/bm25.json
+        # Built BM25 search-index artifact (single-line JSON): term/document data mentioning 'curl', 'git
+          ls-remote'. Data, not code; JSON cannot carry line-level opt-out comments.
+assistant/data/index/bm25.json:1
+
