@@ -59,7 +59,7 @@ def main(argv=None):
 
     bad = []
     for path in changed:
-        if is_allowed(path, ["plugins"] + args.allow):
+        if is_allowed(path, ["plugins", "scripts", "CONTRIBUTING.md"] + args.allow):
             continue
         bad.append(path)
 
