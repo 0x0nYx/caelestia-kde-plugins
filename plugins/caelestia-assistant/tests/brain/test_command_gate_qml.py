@@ -202,7 +202,7 @@ class CommandGateGuardTests(unittest.TestCase):
 
     def test_gate_itself_executes_nothing(self) -> None:
         for banned in ("Process", "runAgentCommand", "Qt.createQmlObject",
-                       "XMLHttpRequest"):
+                       "XMLHttpRequest"):  # caelestia-audit: allow-network
             self.assertNotIn(banned, self.gate,
                               f"the gate must never execute; found {banned}")
 
