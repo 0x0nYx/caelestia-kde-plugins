@@ -108,3 +108,8 @@ assistant/capabilities/shellkb/cmdparse.py:94
           ls-remote'. Data, not code; JSON cannot carry line-level opt-out comments.
 assistant/data/index/bm25.json:1
 
+        # tests/brain/test_command_gate_qml.py
+        # The string 'XMLHttpRequest' is the assertion TARGET: this test asserts the CommandGate QML must
+          never contain it (gate executes nothing).
+tests/brain/test_command_gate_qml.py:200
+
