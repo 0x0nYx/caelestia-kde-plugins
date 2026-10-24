@@ -1985,7 +1985,9 @@
       "enum": null,
       "string_max_len": null,
       "global_only": true,
-      "nouns": [],
+      "nouns": [
+        "notification timeout|expire timeout|timeout"
+      ],
       "citations": [
         [
           "shell/plugin/src/Caelestia/Config/notifsconfig.hpp:29",
@@ -1996,7 +1998,7 @@
           "shipped Nexus control (StepperRow)"
         ],
         [
-          "shell/modules/nexus/pages/services/NotificationPreferencesPage.qml:120",
+          "shell/modules/nexus/pages/services/NotificationPreferencesPage.qml:134",
           "stepper displays seconds (value: x/1000; onMoved: Math.round(v*1000)); stored unit is ms — range converted x1000"
         ]
       ]
@@ -2099,7 +2101,7 @@
           "shipped Nexus control (StepperRow)"
         ],
         [
-          "shell/modules/nexus/pages/services/NotificationPreferencesPage.qml:183",
+          "shell/modules/nexus/pages/services/NotificationPreferencesPage.qml:203",
           "stepper displays seconds (value: x/1000; onMoved: Math.round(value*1000)); stored unit is ms — range converted x1000"
         ]
       ]
@@ -4158,7 +4160,7 @@
           "shipped Nexus control (StepperRow)"
         ],
         [
-          "shell/modules/nexus/pages/utilities/OsdPage.qml:88",
+          "shell/modules/nexus/pages/utilities/OsdPage.qml:95",
           "stepper displays seconds (value: x/1000; onMoved: Math.round(value*1000)); stored unit is ms — range converted x1000"
         ]
       ]
@@ -4618,7 +4620,7 @@
           "shipped Nexus control (StepperRow)"
         ],
         [
-          "shell/modules/nexus/pages/ServicesPage.qml:103",
+          "shell/modules/nexus/pages/ServicesPage.qml:113",
           "stepper displays seconds (value: x/1000; onMoved: Math.round(v*1000)); stored unit is ms — range converted x1000"
         ]
       ]
@@ -4886,7 +4888,7 @@
           "shipped Nexus control (StepperRow)"
         ],
         [
-          "shell/modules/nexus/pages/ServicesPage.qml:114",
+          "shell/modules/nexus/pages/ServicesPage.qml:125",
           "stepper displays seconds (value: x/1000; onMoved: Math.round(v*1000)); stored unit is ms — range converted x1000"
         ]
       ]
@@ -5228,7 +5230,7 @@
           "shipped Nexus control (StepperRow)"
         ],
         [
-          "shell/modules/nexus/pages/services/ArpcPage.qml:89",
+          "shell/modules/nexus/pages/services/ArpcPage.qml:99",
           "stepper displays minutes (value: Math.round(x/60); onMoved: Math.round(v*60)); stored unit is seconds — range converted x60"
         ]
       ]
@@ -5304,7 +5306,7 @@
           "shipped Nexus control (StepperRow)"
         ],
         [
-          "shell/modules/nexus/pages/ServicesPage.qml:155",
+          "shell/modules/nexus/pages/ServicesPage.qml:165",
           "stepper displays percent (value: Math.round(x*100); onMoved: v/100); stored unit is a fraction — range converted /100"
         ]
       ]
@@ -5383,7 +5385,7 @@
           "shipped Nexus control (StepperRow)"
         ],
         [
-          "shell/modules/nexus/pages/ServicesPage.qml:165",
+          "shell/modules/nexus/pages/ServicesPage.qml:176",
           "stepper displays percent (value: Math.round(x*100); onMoved: v/100); stored unit is a fraction — range converted /100"
         ]
       ]
@@ -5499,7 +5501,7 @@
           "shipped Nexus control (StepperRow)"
         ],
         [
-          "shell/modules/nexus/pages/ServicesPage.qml:176",
+          "shell/modules/nexus/pages/ServicesPage.qml:188",
           "stepper displays percent (value: Math.round(x*100); onMoved: v/100); stored unit is a fraction — range converted /100"
         ]
       ]

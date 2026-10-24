@@ -300,66 +300,66 @@ CORE_OVERRIDES: Dict[str, Dict[str, object]] = {
 # the converted minimum/maximum/step plus a citation of the transforming
 # row (the conversion arithmetic is on those very lines).
 RANGE_FIXUPS: Dict[str, Dict[str, object]] = {
-    # NotificationPreferencesPage.qml:117-124 — UI 1-60 seconds.
+    # NotificationPreferencesPage.qml:130-139 — UI 1-60 seconds.
     "notifs.defaultExpireTimeout": {
         "minimum": 1000, "maximum": 60000, "step": 1000,
-        "cite": ("shell/modules/nexus/pages/services/NotificationPreferencesPage.qml:120",
+        "cite": ("shell/modules/nexus/pages/services/NotificationPreferencesPage.qml:134",
                  "stepper displays seconds (value: x/1000; onMoved: "
                  "Math.round(v*1000)); stored unit is ms — range converted x1000"),
     },
-    # NotificationPreferencesPage.qml:180-187 — UI 1-30 seconds.
+    # NotificationPreferencesPage.qml:199-208 — UI 1-30 seconds.
     "notifs.fullscreenExpireTimeout": {
         "minimum": 1000, "maximum": 30000, "step": 1000,
-        "cite": ("shell/modules/nexus/pages/services/NotificationPreferencesPage.qml:183",
+        "cite": ("shell/modules/nexus/pages/services/NotificationPreferencesPage.qml:203",
                  "stepper displays seconds (value: x/1000; onMoved: "
                  "Math.round(value*1000)); stored unit is ms — range converted x1000"),
     },
     # utilities/OsdPage.qml:83-93 — UI 1-10 seconds.
     "osd.hideDelay": {
         "minimum": 1000, "maximum": 10000, "step": 1000,
-        "cite": ("shell/modules/nexus/pages/utilities/OsdPage.qml:88",
+        "cite": ("shell/modules/nexus/pages/utilities/OsdPage.qml:95",
                  "stepper displays seconds (value: x/1000; onMoved: "
                  "Math.round(value*1000)); stored unit is ms — range converted x1000"),
     },
-    # ServicesPage.qml:110-118 — UI 5-120 seconds.
+    # ServicesPage.qml:120-130 — UI 5-120 seconds.
     "nexus.networkRescanInterval": {
         "minimum": 5000, "maximum": 120000, "step": 5000,
-        "cite": ("shell/modules/nexus/pages/ServicesPage.qml:114",
+        "cite": ("shell/modules/nexus/pages/ServicesPage.qml:125",
                  "stepper displays seconds (value: x/1000; onMoved: "
                  "Math.round(v*1000)); stored unit is ms — range converted x1000"),
     },
-    # ServicesPage.qml:100-108 — UI 0.5-10 seconds.
+    # ServicesPage.qml:108-118 — UI 0.5-10 seconds.
     "dashboard.resourceUpdateInterval": {
         "minimum": 500, "maximum": 10000, "step": 500,
-        "cite": ("shell/modules/nexus/pages/ServicesPage.qml:103",
+        "cite": ("shell/modules/nexus/pages/ServicesPage.qml:113",
                  "stepper displays seconds (value: x/1000; onMoved: "
                  "Math.round(v*1000)); stored unit is ms — range converted x1000"),
     },
-    # services/ArpcPage.qml:83-94 — UI 0-60 minutes (0 = never hide).
+    # services/ArpcPage.qml:93-104 — UI 0-60 minutes (0 = never hide).
     "services.arpcIdleTimeout": {
         "minimum": 0, "maximum": 3600, "step": 60,
-        "cite": ("shell/modules/nexus/pages/services/ArpcPage.qml:89",
+        "cite": ("shell/modules/nexus/pages/services/ArpcPage.qml:99",
                  "stepper displays minutes (value: Math.round(x/60); onMoved: "
                  "Math.round(v*60)); stored unit is seconds — range converted x60"),
     },
-    # ServicesPage.qml:151-160 — UI 1-50 percent.
+    # ServicesPage.qml:160-170 — UI 1-50 percent.
     "services.audioIncrement": {
-        "minimum": 0.01, "maximum": 0.5, "step": 0.01,
-        "cite": ("shell/modules/nexus/pages/ServicesPage.qml:155",
-                 "stepper displays percent (value: Math.round(x*100); onMoved: "
-                 "v/100); stored unit is a fraction — range converted /100"),
-    },
-    # ServicesPage.qml:162-170 — UI 1-50 percent.
-    "services.brightnessIncrement": {
         "minimum": 0.01, "maximum": 0.5, "step": 0.01,
         "cite": ("shell/modules/nexus/pages/ServicesPage.qml:165",
                  "stepper displays percent (value: Math.round(x*100); onMoved: "
                  "v/100); stored unit is a fraction — range converted /100"),
     },
-    # ServicesPage.qml:172-181 — UI 50-200 percent.
+    # ServicesPage.qml:171-181 — UI 1-50 percent.
+    "services.brightnessIncrement": {
+        "minimum": 0.01, "maximum": 0.5, "step": 0.01,
+        "cite": ("shell/modules/nexus/pages/ServicesPage.qml:176",
+                 "stepper displays percent (value: Math.round(x*100); onMoved: "
+                 "v/100); stored unit is a fraction — range converted /100"),
+    },
+    # ServicesPage.qml:183-193 — UI 50-200 percent.
     "services.maxVolume": {
         "minimum": 0.5, "maximum": 2.0, "step": 0.05,
-        "cite": ("shell/modules/nexus/pages/ServicesPage.qml:176",
+        "cite": ("shell/modules/nexus/pages/ServicesPage.qml:188",
                  "stepper displays percent (value: Math.round(x*100); onMoved: "
                  "v/100); stored unit is a fraction — range converted /100"),
     },
