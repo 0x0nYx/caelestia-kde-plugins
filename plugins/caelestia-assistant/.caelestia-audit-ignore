@@ -98,6 +98,11 @@ assistant/capabilities/genius/sysintel.py:87
           local docs; no network calls.
 assistant/capabilities/retrieval/tools/build_docs_corpus.py:62
 
+        # assistant/capabilities/shellkb/cmdparse.py
+        # CLI grammar: regex matching curl/wget pipe-to-shell shapes in order to CLASSIFY them
+          destructive. Parser never executes matches.
+assistant/capabilities/shellkb/cmdparse.py:94
+
         # assistant/data/index/bm25.json
         # Built BM25 search-index artifact (single-line JSON): term/document data mentioning 'curl', 'git
           ls-remote'. Data, not code; JSON cannot carry line-level opt-out comments.
