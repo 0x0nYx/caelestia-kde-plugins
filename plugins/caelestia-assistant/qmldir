@@ -1,0 +1,2 @@
+singleton CommandGate 1.0 assistant/adapters/caelestia/shell/services/CommandGate.qml
+singleton SettingsTools 1.0 assistant/adapters/caelestia/shell/services/SettingsTools.qml
