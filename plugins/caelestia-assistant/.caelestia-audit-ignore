@@ -31,6 +31,11 @@ assistant/adapters/caelestia/opt-in/sidebar-legacy/AiAssistantLegacy.qml:2232
 assistant/adapters/caelestia/opt-in/sidebar-legacy/AiAssistantLegacy.qml:2238
 assistant/adapters/caelestia/opt-in/sidebar-legacy/AiAssistantLegacy.qml:2359
 
+        # assistant/capabilities/brain/qa.py
+        # Question-type cue table: the literal 'sudo' is a string keyword used to classify question text;
+          nothing is executed.
+assistant/capabilities/brain/qa.py:243
+
         # assistant/capabilities/diagnostics/argumentation.py
         # Command tokenization: the literal 'sudo' is stripped/classified as a token; analysis only, never
           executed.
