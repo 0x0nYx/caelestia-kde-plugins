@@ -72,8 +72,6 @@ _EFFECTS_PATHS = frozenset((
     "appearance.blurMask",
     "appearance.pitchBlack",
     "appearance.islands",
-    "appearance.ambientColor",
-    "appearance.ambientOpacity",
     "appearance.transparency.enabled",
     "appearance.transparency.base",
     "appearance.transparency.layers",
@@ -561,8 +559,16 @@ EXPLAIN_RULES: List[Dict[str, object]] = [
         "cites": ["shell/plugin/src/Caelestia/Config/appearanceconfig.cpp:209"],
     },
     {
-        "path": "appearance.ambientColor",
-        "when": "appearance.ambientColor == true and _light == true",
+        "path": "overview.ambientColor",
+        "when": "overview.ambientColor == true and _light == true",
+        "answer": "The ambient glow is configured ON but is currently hidden, "
+                  "because ambient glow only renders in dark mode — it gates "
+                  "on ambientColor && !light ({cite}).",
+        "cites": ["shell/components/effects/AmbientGlow.qml:34"],
+    },
+    {
+        "path": "dashboard.ambientColor",
+        "when": "dashboard.ambientColor == true and _light == true",
         "answer": "The ambient glow is configured ON but is currently hidden, "
                   "because ambient glow only renders in dark mode — it gates "
                   "on ambientColor && !light ({cite}).",
@@ -651,7 +657,8 @@ PRESETS: List[Dict[str, object]] = [
         "calls": [
             ["setBlurEnabled", False],
             ["setAnimationSpeed", 0.25],
-            ["setAmbientColor", False],
+            ["setOverviewAmbientColor", False],
+            ["setDashboardAmbientColor", False],
             ["setWallpaperRecolor", False],
         ],
     },
