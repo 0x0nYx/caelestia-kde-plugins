@@ -1,0 +1,79 @@
+{
+  "id": "wallpaper-depth",
+  "name": "Wallpaper Depth",
+  "description": "Estimates a depth map for the current wallpaper on this machine, then redraws its foreground above the desktop so widgets, icons and the clock sit behind hills, desks and buildings.",
+  "icon": "layers",
+  "mediaurl": "preview.jpg",
+  "screenshots": [
+    "detail.jpg",
+    "panel.jpg"
+  ],
+  "version": "1.0.0",
+  "type": "quickshell",
+  "ui": "main.qml",
+  "author": {
+    "name": "Solanaceae",
+    "url": "https://github.com/0xSolanaceae"
+  },
+  "license": "MIT",
+  "keywords": [
+    "wallpaper",
+    "desktop",
+    "depth",
+    "widgets",
+    "occlusion"
+  ],
+  "shell-compat": {
+    "min": "2.6.3"
+  },
+  "backgroundWidgets": [
+    {
+      "id": "wallpaperDepthForeground",
+      "name": "Wallpaper Depth Foreground",
+      "component": "Foreground.qml",
+      "z": 8
+    }
+  ],
+  "barWidgets": [
+    {
+      "id": "wallpaperDepth",
+      "name": "Wallpaper Depth",
+      "icon": "layers",
+      "defaultZone": "right",
+      "component": "BarWidget.qml",
+      "popout": "Popout.qml"
+    }
+  ],
+  "settings": [
+    {
+      "id": "auto_generate",
+      "label": "Generate automatically",
+      "type": "toggle",
+      "default": true
+    },
+    {
+      "id": "auto_threshold",
+      "label": "Automatic threshold",
+      "type": "toggle",
+      "default": true
+    },
+    {
+      "id": "threshold",
+      "label": "Foreground threshold",
+      "type": "number",
+      "default": 30,
+      "min": 0,
+      "max": 100,
+      "step": 1
+    },
+    {
+      "id": "feather",
+      "label": "Edge feather",
+      "type": "number",
+      "default": 8,
+      "min": 0,
+      "max": 50,
+      "step": 1
+    }
+  ]
+}
