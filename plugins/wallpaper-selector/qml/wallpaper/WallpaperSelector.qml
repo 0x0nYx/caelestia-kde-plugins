@@ -69,7 +69,7 @@ PanelWindow {
 
   Timer {
     id: previewTimer
-    interval: 100
+    interval: 500
     onTriggered: {
       if (!appWallpaper.showing || !appWallpaper.cardVisible) return
       var idx = appWallpaper.currentSelectedIndex()
@@ -510,7 +510,7 @@ PanelWindow {
 
     Views.SliceView {
         id: sliceListView
-        visible: appWallpaper.cardVisible && appWallpaper.isSliceMode
+        visible: appWallpaper.cardVisible && appWallpaper.isSliceMode && appWallpaper.isMainScreen
         enabled: !settingsPanel.showing
         anchors.top: cardContainer.top
         anchors.topMargin: appWallpaper.topBarHeight
@@ -571,7 +571,7 @@ PanelWindow {
 
     Views.HexView {
         id: hexListView
-        visible: appWallpaper.cardVisible && appWallpaper.isHexMode
+        visible: appWallpaper.cardVisible && appWallpaper.isHexMode && appWallpaper.isMainScreen
         enabled: !settingsPanel.showing
         anchors.top: cardContainer.top
         anchors.topMargin: appWallpaper.topBarHeight
@@ -884,7 +884,7 @@ PanelWindow {
 
     Views.ThumbGridView {
         id: thumbGridView
-        visible: appWallpaper.cardVisible && appWallpaper.isGridMode
+        visible: appWallpaper.cardVisible && appWallpaper.isGridMode && appWallpaper.isMainScreen
         enabled: !settingsPanel.showing
         anchors.top: cardContainer.top
         anchors.topMargin: appWallpaper.topBarHeight

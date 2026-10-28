@@ -77,6 +77,15 @@ pkexec cmake --install           # caelestia-audit: allow-privilege
 
 Use these sparingly - the store defaults to source-only with no surprise downloads or unexpected shelling out.
 
+For findings where a same-line comment is impossible or wrong - JSON data artifacts (no comment syntax without corrupting the data), flagged text inside docstrings or string vocabularies (appending a comment would change the string), or assertion-target strings in tests - a plugin may ship a `.caelestia-audit-ignore` file next to its `metadata.json`. Each entry names a plugin-relative path, optionally restricted to a line or an inclusive line range, with a reason:
+
+```
+assistant/data/index/bm25.json   # data artifact, not code
+src/verbs.py:120-132             # string vocabulary, not a call
+```
+
+Entries suppress hard errors for exactly those paths and lines; soft warnings still surface. Paths must stay inside the plugin folder (anything that escapes it is skipped with a warning), an entry with no line span suppresses the whole file and is reported as a warning so it stays visible in CI, and a malformed or inverted span such as `10-5` fails the check. Keep the list short and the reasons honest - maintainers review every entry as part of the plugin diff.
+
 ## Maintainer review checklist
 
 - CI passes.

@@ -160,7 +160,7 @@ Item {
         width: 128
         height: 128
         hoverEnabled: false
-        propagateComposedEvents: true
+        preventStealing: true
         cursorShape: dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor
         acceptedButtons: Qt.LeftButton
 

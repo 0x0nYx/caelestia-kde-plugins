@@ -139,6 +139,123 @@
       "description": "Optional Quickshell UI entry point, relative to the plugin folder (e.g. main.qml). Use it when a plugin whose type is not 'quickshell' (a kwineffect with a settings UI) still ships a Quickshell front-end; the shell loads it the same way it loads a quickshell plugin's main.qml.",
       "minLength": 1
     },
+    "barWidgets": {
+      "type": "array",
+      "description": "Bar widgets registered by this plugin into the shell taskbar.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "component"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "defaultZone": {
+            "type": "string",
+            "enum": ["left", "middle", "right"]
+          },
+          "component": {
+            "type": "string",
+            "minLength": 1
+          },
+          "popout": {
+            "type": "string",
+            "minLength": 1
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "unavailableText": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "backgroundWidgets": {
+      "type": "array",
+      "description": "Background widgets registered by this plugin into the desktop background layer.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "component"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "component": {
+            "type": "string",
+            "minLength": 1
+          },
+          "z": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "settings": {
+      "type": "array",
+      "description": "User-configurable settings offered by the shell for this plugin.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "type"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Setting id, used as the key the value is stored under."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Label shown next to the control."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["toggle", "text", "number", "enum"],
+            "description": "Kind of setting control."
+          },
+          "default": {
+            "type": ["boolean", "string", "number"],
+            "description": "Default value used until another one is picked."
+          },
+          "options": {
+            "type": "array",
+            "description": "Available choices for enum type.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "min": {
+            "type": "number",
+            "description": "Minimum value for number type."
+          },
+          "max": {
+            "type": "number",
+            "description": "Maximum value for number type."
+          },
+          "step": {
+            "type": "number",
+            "description": "Step increment for number type."
+          },
+          "placeholder": {
+            "type": "string",
+            "description": "Placeholder text for text type."
+          }
+        }
+      }
+    },
     "deprecated": {
       "type": "boolean",
       "description": "true = keep serving to existing installs but stop recommending for new installs.",

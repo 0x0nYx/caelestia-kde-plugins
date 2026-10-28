@@ -1,16 +1,99 @@
 {
   "format": "caelestia-plugin-index",
   "version": 1,
-  "generated": "2026-09-12T19:11:04Z",
+  "generated": "2026-10-28T04:18:29Z",
   "plugins": [
+    {
+      "id": "caelestia-assistant",
+      "path": "plugins/caelestia-assistant",
+      "name": "Caelestia Assistant",
+      "description": "Offline-first assistant for the Caelestia shell: deterministic diagnostics, learned routing, natural-language settings editing, stream scanning, and a consent-gated agent. Python stdlib only; ships optional Quickshell sidebar/services integration surfaces for the shell. Run caelestia-assist in terminal to get started.",
+      "version": "0.1.0",
+      "type": "quickshell",
+      "author": {
+        "name": "0x0nYx",
+        "url": "https://github.com/0x0nYx"
+      },
+      "license": "GPL-3.0-or-later",
+      "keywords": [
+        "assistant",
+        "ai",
+        "diagnostics",
+        "settings",
+        "agent",
+        "cli",
+        "offline"
+      ],
+      "homepage": "https://github.com/ladybug-me/caelestia-kde",
+      "repository": "https://github.com/0x0nYx/caelestia-assistant"
+    },
+    {
+      "id": "proton-authenticator",
+      "path": "plugins/proton-authenticator",
+      "name": "Proton Authenticator",
+      "description": "Search and copy Proton Authenticator 2FA codes from a panel in Caelestia. Requires Proton Authenticator. (AUR, .deb, rpm etc any version of the app works.)",
+      "icon": "icon.svg",
+      "mediaurl": "image1.png",
+      "screenshots": [
+        "image1.png"
+      ],
+      "version": "1.0.0",
+      "type": "quickshell",
+      "ui": "main.qml",
+      "author": {
+        "name": "Sliver10",
+        "url": "https://github.com/Sliver10"
+      },
+      "license": "GPL-3.0-or-later",
+      "keywords": [
+        "2fa",
+        "totp",
+        "otp",
+        "authenticator",
+        "proton",
+        "security"
+      ],
+      "shell-compat": {
+        "min": "2.6.2"
+      },
+      "barWidgets": [
+        {
+          "id": "protonAuthenticator",
+          "name": "Proton Authenticator",
+          "icon": "key",
+          "defaultZone": "right",
+          "component": "BarWidget.qml",
+          "popout": "Popout.qml"
+        }
+      ]
+    },
     {
       "id": "shimeji-cat",
       "path": "plugins/shimeji-cat",
       "name": "Shimeji Cat",
       "description": "A little cat that lives on your desktop, wanders around, sits on the taskbar, and can be picked up and tossed with the mouse.",
       "icon": "icon.png",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "type": "quickshell",
+      "restart": true,
+      "backgroundWidgets": [
+        {
+          "id": "shimeji-cat",
+          "name": "Shimeji Cat",
+          "component": "ShimejiCat.qml"
+        }
+      ],
+      "settings": [
+        {
+          "id": "petCount",
+          "label": "Cat count",
+          "type": "number",
+          "default": 1,
+          "min": 1,
+          "max": 10,
+          "step": 1
+        }
+      ],
       "author": {
         "name": "0xSolanaceae",
         "url": "https://github.com/0xSolanaceae"
@@ -28,13 +111,93 @@
       }
     },
     {
+      "id": "wallpaper-depth",
+      "path": "plugins/wallpaper-depth",
+      "name": "Wallpaper Depth",
+      "description": "Estimates a depth map for the current wallpaper on this machine, then redraws its foreground above the desktop so widgets, icons and the clock sit behind hills, desks and buildings.",
+      "icon": "layers",
+      "mediaurl": "preview.jpg",
+      "screenshots": [
+        "detail.jpg",
+        "panel.jpg"
+      ],
+      "version": "1.0.0",
+      "type": "quickshell",
+      "ui": "main.qml",
+      "author": {
+        "name": "Solanaceae",
+        "url": "https://github.com/0xSolanaceae"
+      },
+      "license": "MIT",
+      "keywords": [
+        "wallpaper",
+        "desktop",
+        "depth",
+        "widgets",
+        "occlusion"
+      ],
+      "shell-compat": {
+        "min": "2.6.3"
+      },
+      "backgroundWidgets": [
+        {
+          "id": "wallpaperDepthForeground",
+          "name": "Wallpaper Depth Foreground",
+          "component": "Foreground.qml",
+          "z": 8
+        }
+      ],
+      "barWidgets": [
+        {
+          "id": "wallpaperDepth",
+          "name": "Wallpaper Depth",
+          "icon": "layers",
+          "defaultZone": "right",
+          "component": "BarWidget.qml",
+          "popout": "Popout.qml"
+        }
+      ],
+      "settings": [
+        {
+          "id": "auto_generate",
+          "label": "Generate automatically",
+          "type": "toggle",
+          "default": true
+        },
+        {
+          "id": "auto_threshold",
+          "label": "Automatic threshold",
+          "type": "toggle",
+          "default": true
+        },
+        {
+          "id": "threshold",
+          "label": "Foreground threshold",
+          "type": "number",
+          "default": 30,
+          "min": 0,
+          "max": 100,
+          "step": 1
+        },
+        {
+          "id": "feather",
+          "label": "Edge feather",
+          "type": "number",
+          "default": 8,
+          "min": 0,
+          "max": 50,
+          "step": 1
+        }
+      ]
+    },
+    {
       "id": "wallpaper-selector",
       "path": "plugins/wallpaper-selector",
       "name": "Wallpaper Selector",
       "description": "Press Meta+Shift+W to view a full-screen wallpaper selector with glassmorphism UI.",
       "icon": "wallpaper",
       "mediaurl": "demo.mp4",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "type": "quickshell",
       "restart": true,
       "author": {

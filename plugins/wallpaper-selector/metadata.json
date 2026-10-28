@@ -4,7 +4,7 @@
   "description": "Press Meta+Shift+W to view a full-screen wallpaper selector with glassmorphism UI.",
   "icon": "wallpaper",
   "mediaurl": "demo.mp4",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "quickshell",
   "restart": true,
   "author": {

@@ -37,6 +37,9 @@ Validated against [`schemas/plugin.schema.json`](../schemas/plugin.schema.json) 
 | `dependencies` | no | array of string | Ids of other plugins. |
 | `kwineffect` | no | object | `{ "kpluginId": "…" }` - required for `type: "kwineffect"`. |
 | `ui` | no | string | Path to a Quickshell UI entry point inside the plugin folder (usually `main.qml`). Set it when a plugin whose `type` is not `quickshell` still ships a Quickshell front-end, e.g. a `kwineffect` with a settings UI. |
+| `barWidgets` | no | array of object | Taskbar widgets registered by this plugin (`[{ id, component, [name], [icon], [defaultZone], [popout], [available], [unavailableText] }]`). |
+| `backgroundWidgets` | no | array of object | Desktop background widgets registered by this plugin (`[{ id, component, [name], [z] }]`). |
+| `settings` | no | array of object | User-configurable settings shown in the shell Plugins page (`[{ id, label, type, [default], [options], [min], [max], [step], [placeholder] }]`). |
 | `deprecated` | no | boolean | `true` = keep serving existing installs, stop recommending. |
 | `replacement` | no | string | Plugin id replacing this one (used with `deprecated`). |
 

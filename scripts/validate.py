@@ -314,6 +314,40 @@ def validate_plugin(plugin_dir, schema, warnings):
         else:
             problems.extend(check_referenced_file(plugin_dir, plugin_id, "ui", ui))
 
+    for idx, widget in enumerate(meta.get("barWidgets", []) or []):
+        if isinstance(widget, dict):
+            comp = widget.get("component")
+            if comp:
+                problems.extend(check_referenced_file(plugin_dir, plugin_id, f"barWidgets[{idx}].component", comp))
+            popout = widget.get("popout")
+            if popout:
+                problems.extend(check_referenced_file(plugin_dir, plugin_id, f"barWidgets[{idx}].popout", popout))
+
+    for idx, widget in enumerate(meta.get("backgroundWidgets", []) or []):
+        if isinstance(widget, dict):
+            comp = widget.get("component")
+            if comp:
+                problems.extend(check_referenced_file(plugin_dir, plugin_id, f"backgroundWidgets[{idx}].component", comp))
+
+    seen_setting_ids = set()
+    for idx, setting in enumerate(meta.get("settings", []) or []):
+        if isinstance(setting, dict):
+            sid = setting.get("id")
+            if sid:
+                if sid in seen_setting_ids:
+                    problems.append(f"plugin '{plugin_id}': duplicate setting id {sid!r}")
+                seen_setting_ids.add(sid)
+            stype = setting.get("type")
+            if stype == "enum":
+                options = setting.get("options")
+                if not options or not isinstance(options, list):
+                    problems.append(f"plugin '{plugin_id}': setting {sid!r} of type 'enum' requires non-empty 'options'")
+            elif stype == "number":
+                smin = setting.get("min")
+                smax = setting.get("max")
+                if smin is not None and smax is not None and smin > smax:
+                    problems.append(f"plugin '{plugin_id}': setting {sid!r} min ({smin}) cannot exceed max ({smax})")
+
     for rel in find_forbidden_files(plugin_dir):
         problems.append(
             f"plugin '{plugin_id}': compiled binary/archive not allowed "

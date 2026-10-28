@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")" && pwd)"
+
+if ! PY="$(command -v python3)"; then
+    printf '%s\n' '{"ok":false,"entries":[],"error":{"code":"DEPS_MISSING","message":"python3 not found"}}'
+    exit 1
+fi
+
+exec "$PY" "$HERE/protonauth_list.py" "$@"
