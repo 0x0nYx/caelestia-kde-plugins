@@ -1,8 +1,32 @@
 {
   "format": "caelestia-plugin-index",
   "version": 1,
-  "generated": "2026-10-26T17:24:04Z",
+  "generated": "2026-10-28T04:18:29Z",
   "plugins": [
+    {
+      "id": "caelestia-assistant",
+      "path": "plugins/caelestia-assistant",
+      "name": "Caelestia Assistant",
+      "description": "Offline-first assistant for the Caelestia shell: deterministic diagnostics, learned routing, natural-language settings editing, stream scanning, and a consent-gated agent. Python stdlib only; ships optional Quickshell sidebar/services integration surfaces for the shell. Run caelestia-assist in terminal to get started.",
+      "version": "0.1.0",
+      "type": "quickshell",
+      "author": {
+        "name": "0x0nYx",
+        "url": "https://github.com/0x0nYx"
+      },
+      "license": "GPL-3.0-or-later",
+      "keywords": [
+        "assistant",
+        "ai",
+        "diagnostics",
+        "settings",
+        "agent",
+        "cli",
+        "offline"
+      ],
+      "homepage": "https://github.com/ladybug-me/caelestia-kde",
+      "repository": "https://github.com/0x0nYx/caelestia-assistant"
+    },
     {
       "id": "proton-authenticator",
       "path": "plugins/proton-authenticator",
